@@ -1,0 +1,61 @@
+[workspace]
+resolver = "2"
+members = [
+    ".",
+    "crates/pixelcore-runtime",
+    "crates/pixelcore-swarm",
+    "crates/pixelcore-heartbeat",
+    "crates/pixelcore-mcp",
+    "crates/pixelcore-skills",
+    "crates/pixelcore-storage",
+    "crates/pixelcore-ipc",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["PixelCore Team"]
+license = "MIT"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+thiserror = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+async-trait = "0.1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+flume = "0.11"
+aes-gcm = "0.10"
+sha2 = "0.10"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+pixelcore-runtime = { path = "crates/pixelcore-runtime" }
+pixelcore-swarm = { path = "crates/pixelcore-swarm" }
+pixelcore-heartbeat = { path = "crates/pixelcore-heartbeat" }
+pixelcore-mcp = { path = "crates/pixelcore-mcp" }
+pixelcore-skills = { path = "crates/pixelcore-skills" }
+pixelcore-storage = { path = "crates/pixelcore-storage" }
+pixelcore-ipc = { path = "crates/pixelcore-ipc" }
+
+[package]
+name = "pixelcore"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+pixelcore-runtime = { workspace = true }
+pixelcore-swarm = { workspace = true }
+pixelcore-heartbeat = { workspace = true }
+pixelcore-mcp = { workspace = true }
+pixelcore-storage = { workspace = true }
+pixelcore-ipc = { workspace = true }
