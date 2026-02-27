@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
-use flume::{Sender, Receiver};
+use tokio::sync::broadcast;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Event {
@@ -41,25 +41,24 @@ impl Event {
 
 #[derive(Clone)]
 pub struct EventBus {
-    sender: Sender<Event>,
-    receiver: Receiver<Event>,
+    sender: broadcast::Sender<Event>,
 }
 
 impl EventBus {
     pub fn new() -> Self {
-        let (sender, receiver) = flume::unbounded();
-        Self { sender, receiver }
+        let (sender, _) = broadcast::channel(1024);
+        Self { sender }
     }
 
-    pub fn publish(&self, event: Event) -> Result<(), flume::SendError<Event>> {
+    pub fn publish(&self, event: Event) -> Result<usize, broadcast::error::SendError<Event>> {
         self.sender.send(event)
     }
 
-    pub fn subscribe(&self) -> Receiver<Event> {
-        self.receiver.clone()
+    pub fn subscribe(&self) -> broadcast::Receiver<Event> {
+        self.sender.subscribe()
     }
 
-    pub fn sender(&self) -> Sender<Event> {
+    pub fn sender(&self) -> broadcast::Sender<Event> {
         self.sender.clone()
     }
 }

@@ -33,10 +33,10 @@ async fn main() {
     monitor.run().await;
 
     // 订阅心流状态变化事件
-    let receiver = event_bus.subscribe();
+    let mut receiver = event_bus.subscribe();
     tokio::spawn(async move {
         loop {
-            match receiver.recv_async().await {
+            match receiver.recv().await {
                 Ok(event) => {
                     if let EventKind::Custom(ref kind) = event.kind {
                         if kind == "flow_state_changed" {
@@ -44,6 +44,9 @@ async fn main() {
                                 serde_json::to_string_pretty(&event.payload).unwrap());
                         }
                     }
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                    println!("⚠️  跳过了 {} 个事件", n);
                 }
                 Err(_) => break,
             }

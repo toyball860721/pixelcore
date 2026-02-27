@@ -62,18 +62,21 @@ impl FlowMonitor {
 
     /// 启动监控（监听事件并更新状态）
     pub async fn run(&self) {
-        let receiver = self.event_bus.subscribe();
+        let mut receiver = self.event_bus.subscribe();
         let state_machines = Arc::clone(&self.state_machines);
         let event_bus = self.event_bus.clone();
 
         tokio::spawn(async move {
             loop {
-                match receiver.recv_async().await {
+                match receiver.recv().await {
                     Ok(event) => {
                         Self::handle_event(event, &state_machines, &event_bus).await;
                     }
-                    Err(_) => {
-                        // Channel closed
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                        tracing::warn!("FlowMonitor lagged, skipped {} events", n);
+                        // 继续接收后续消息
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
                         break;
                     }
                 }
