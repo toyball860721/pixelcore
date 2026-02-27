@@ -10,4 +10,7 @@ pub enum StorageError {
 
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Sled error: {0}")]
+    Sled(#[from] sled::Error),
 }

@@ -58,7 +58,7 @@ impl Skill for StorageSetSkill {
         let value = input.args.get("value")
             .cloned()
             .ok_or_else(|| SkillError::InvalidInput("missing 'value'".to_string()))?;
-        self.store.set(key, value);
+        self.store.set(key, value).map_err(|e| SkillError::Execution(e.to_string()))?;
         Ok(SkillOutput::ok(serde_json::json!({ "ok": true })))
     }
 }
