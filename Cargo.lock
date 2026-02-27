@@ -1167,7 +1167,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
- "flume",
  "serde",
  "serde_json",
  "thiserror",
