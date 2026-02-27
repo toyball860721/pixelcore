@@ -14,3 +14,4 @@ tracing-subscriber = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-claw = { workspace = true }
 pixelcore-skills = { workspace = true }
+pixelcore-storage = { workspace = true }

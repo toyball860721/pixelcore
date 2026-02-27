@@ -9,6 +9,7 @@ use pixelcore_claw::{
 };
 use pixelcore_runtime::{Agent, AgentId, AgentConfig, AgentState, RuntimeError, Message};
 use pixelcore_skills::{Skill, SkillInput, SkillRegistry};
+use pixelcore_storage::Storage;
 
 const MAX_TOOL_ROUNDS: usize = 10;
 
@@ -19,6 +20,7 @@ pub struct ClaudeAgent {
     /// Full conversation history with blocks preserved for tool-use round-trips.
     history: Vec<ApiMessage>,
     skills: SkillRegistry,
+    storage: Option<Storage>,
 }
 
 impl ClaudeAgent {
@@ -39,7 +41,15 @@ impl ClaudeAgent {
             client,
             history: Vec::new(),
             skills: SkillRegistry::new(),
+            storage: None,
         }
+    }
+
+    /// Attach a storage backend. History will be auto-saved after each turn
+    /// and can be restored via `load_history`.
+    pub fn with_storage(mut self, storage: Storage) -> Self {
+        self.storage = Some(storage);
+        self
     }
 
     /// Register a skill so the agent can call it as a tool.
@@ -49,6 +59,35 @@ impl ClaudeAgent {
 
     pub fn reset(&mut self) {
         self.history.clear();
+    }
+
+    fn history_key(&self) -> String {
+        format!("agent:{}:history", self.config.id)
+    }
+
+    /// Persist current history to storage.
+    pub fn save_history(&self) -> Result<(), RuntimeError> {
+        let Some(storage) = &self.storage else { return Ok(()); };
+        let value = serde_json::to_value(&self.history)
+            .map_err(|e| RuntimeError::Other(anyhow!(e)))?;
+        storage.set(self.history_key(), value)
+            .map_err(|e| RuntimeError::Other(anyhow!(e)))?;
+        Ok(())
+    }
+
+    /// Restore history from storage. No-op if no storage or key not found.
+    pub fn load_history(&mut self) -> Result<(), RuntimeError> {
+        let Some(storage) = &self.storage else { return Ok(()); };
+        match storage.get(&self.history_key()) {
+            Ok(value) => {
+                self.history = serde_json::from_value(value)
+                    .map_err(|e| RuntimeError::Other(anyhow!(e)))?;
+                info!(agent = %self.config.name, messages = self.history.len(), "history restored");
+            }
+            Err(pixelcore_storage::StorageError::NotFound(_)) => {}
+            Err(e) => return Err(RuntimeError::Other(anyhow!(e))),
+        }
+        Ok(())
     }
 
     fn build_request(&self) -> LlmRequest {
@@ -138,6 +177,9 @@ impl Agent for ClaudeAgent {
 
             if tool_uses.is_empty() || stop_reason == "end_turn" || stop_reason == "stop" {
                 let text = Self::extract_text(&response.content);
+                if let Err(e) = self.save_history() {
+                    warn!(agent = %self.config.name, error = %e, "failed to save history");
+                }
                 return Ok(Message::assistant(text));
             }
 
