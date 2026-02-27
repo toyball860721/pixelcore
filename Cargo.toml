@@ -5,7 +5,7 @@ members = [
     "crates/pixelcore-runtime",
     "crates/pixelcore-swarm",
     "crates/pixelcore-heartbeat",
-    "crates/pixelcore-mcp",
+    "crates/pixelcore-claw",
     "crates/pixelcore-skills",
     "crates/pixelcore-storage",
     "crates/pixelcore-ipc",
@@ -36,7 +36,7 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 pixelcore-runtime = { path = "crates/pixelcore-runtime" }
 pixelcore-swarm = { path = "crates/pixelcore-swarm" }
 pixelcore-heartbeat = { path = "crates/pixelcore-heartbeat" }
-pixelcore-mcp = { path = "crates/pixelcore-mcp" }
+pixelcore-claw = { path = "crates/pixelcore-claw" }
 pixelcore-skills = { path = "crates/pixelcore-skills" }
 pixelcore-storage = { path = "crates/pixelcore-storage" }
 pixelcore-ipc = { path = "crates/pixelcore-ipc" }
@@ -56,6 +56,6 @@ tracing-subscriber = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-swarm = { workspace = true }
 pixelcore-heartbeat = { workspace = true }
-pixelcore-mcp = { workspace = true }
+pixelcore-claw = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }

@@ -1,5 +1,5 @@
 [package]
-name = "pixelcore-skills"
+name = "pixelcore-claw"
 version.workspace = true
 edition.workspace = true
 
@@ -12,5 +12,6 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 async-trait = { workspace = true }
 uuid = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
 pixelcore-runtime = { workspace = true }
-pixelcore-claw = { workspace = true }
