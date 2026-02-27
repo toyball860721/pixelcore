@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing_subscriber::EnvFilter;
@@ -11,6 +11,9 @@ use pixelcore_swarm::Swarm;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Load environment variables from .env file
+    dotenvy::dotenv().ok();
+
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env().add_directive("info".parse()?))
         .init();
@@ -18,14 +21,21 @@ async fn main() -> Result<()> {
     // Shared storage backend.
     let store = Arc::new(Storage::new());
 
+    // Get API key from environment variable
+    let api_key = std::env::var("SILICONFLOW_API_KEY")
+        .context("SILICONFLOW_API_KEY not found in environment. Please set it in .env file or as an environment variable.")?;
+
+    // Get model name from environment variable or use default
+    let model_name = std::env::var("MODEL_NAME")
+        .unwrap_or_else(|_| "Pro/MiniMaxAI/MiniMax-M2.5".to_string());
+
     // Build agent with skills.
     let config = AgentConfig::new(
         "demo-agent",
         "You are a helpful assistant with access to a key-value store. Be concise.",
-    ).with_model("Pro/MiniMaxAI/MiniMax-M2.5");
-    let client = pixelcore_claw::ClawClient::siliconflow(
-        "sk-ewcpabkoyhlwimwcmqckbxhudfcdysviltqagvzsxlcjqrpe",
-    );
+    ).with_model(&model_name);
+
+    let client = pixelcore_claw::ClawClient::siliconflow(&api_key);
     let mut agent = ClaudeAgent::with_client(config, client);
     agent.register_skill(Arc::new(EchoSkill));
     agent.register_skill(Arc::new(StorageGetSkill { store: Arc::clone(&store) }));
