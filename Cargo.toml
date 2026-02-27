@@ -9,6 +9,7 @@ members = [
     "crates/pixelcore-skills",
     "crates/pixelcore-storage",
     "crates/pixelcore-ipc",
+    "crates/pixelcore-agents",
 ]
 
 [workspace.package]
@@ -40,6 +41,7 @@ pixelcore-claw = { path = "crates/pixelcore-claw" }
 pixelcore-skills = { path = "crates/pixelcore-skills" }
 pixelcore-storage = { path = "crates/pixelcore-storage" }
 pixelcore-ipc = { path = "crates/pixelcore-ipc" }
+pixelcore-agents = { path = "crates/pixelcore-agents" }
 
 [package]
 name = "pixelcore"
@@ -59,3 +61,4 @@ pixelcore-heartbeat = { workspace = true }
 pixelcore-claw = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }
+pixelcore-agents = { workspace = true }

@@ -990,6 +990,7 @@ name = "pixelcore"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "pixelcore-agents",
  "pixelcore-claw",
  "pixelcore-heartbeat",
  "pixelcore-ipc",
@@ -1001,6 +1002,20 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "pixelcore-agents"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "pixelcore-claw",
+ "pixelcore-runtime",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
