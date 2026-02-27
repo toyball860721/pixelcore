@@ -10,5 +10,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 async-trait = { workspace = true }
 tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-claw = { workspace = true }
+pixelcore-skills = { workspace = true }

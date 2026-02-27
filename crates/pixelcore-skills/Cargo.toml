@@ -14,3 +14,5 @@ async-trait = { workspace = true }
 uuid = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-claw = { workspace = true }
+pixelcore-storage = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }

@@ -995,6 +995,7 @@ dependencies = [
  "pixelcore-heartbeat",
  "pixelcore-ipc",
  "pixelcore-runtime",
+ "pixelcore-skills",
  "pixelcore-storage",
  "pixelcore-swarm",
  "serde",
@@ -1012,10 +1013,12 @@ dependencies = [
  "async-trait",
  "pixelcore-claw",
  "pixelcore-runtime",
+ "pixelcore-skills",
  "serde",
  "serde_json",
  "tokio",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -1091,6 +1094,8 @@ dependencies = [
  "async-trait",
  "pixelcore-claw",
  "pixelcore-runtime",
+ "pixelcore-storage",
+ "reqwest",
  "serde",
  "serde_json",
  "thiserror",

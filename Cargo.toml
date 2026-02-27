@@ -59,6 +59,7 @@ pixelcore-runtime = { workspace = true }
 pixelcore-swarm = { workspace = true }
 pixelcore-heartbeat = { workspace = true }
 pixelcore-claw = { workspace = true }
+pixelcore-skills = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }
 pixelcore-agents = { workspace = true }

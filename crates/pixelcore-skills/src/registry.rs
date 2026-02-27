@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use crate::skill::Skill;
 use crate::error::SkillError;
+use pixelcore_claw::types::Tool;
 
 pub struct SkillRegistry {
     skills: HashMap<String, Arc<dyn Skill>>,
@@ -25,6 +26,15 @@ impl SkillRegistry {
 
     pub fn list(&self) -> Vec<&str> {
         self.skills.keys().map(|s| s.as_str()).collect()
+    }
+
+    /// Convert all registered skills to `Tool` descriptors for LLM requests.
+    pub fn as_tools(&self) -> Vec<Tool> {
+        self.skills.values().map(|s| Tool {
+            name: s.name().to_string(),
+            description: s.description().to_string(),
+            input_schema: s.input_schema(),
+        }).collect()
     }
 }
 

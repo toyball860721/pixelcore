@@ -52,6 +52,11 @@ impl AgentConfig {
             metadata: serde_json::Value::Null,
         }
     }
+
+    pub fn with_model(mut self, model: impl Into<String>) -> Self {
+        self.model = model.into();
+        self
+    }
 }
 
 #[async_trait]

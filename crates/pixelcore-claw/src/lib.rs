@@ -4,7 +4,7 @@ pub mod types;
 
 pub use client::ClawClient;
 pub use error::ClawError;
-pub use types::{LlmRequest, LlmResponse, Tool, ToolCall, ToolResult};
+pub use types::{LlmRequest, LlmResponse, Tool, ToolCall, ToolResult, OpenAiRequest, OpenAiResponse};
 
 // Back-compat re-exports
 pub use client::ClawClient as McpClient;
