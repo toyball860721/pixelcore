@@ -15,4 +15,5 @@ uuid = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-claw = { workspace = true }
 pixelcore-storage = { workspace = true }
+pixelcore-swarm = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }

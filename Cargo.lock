@@ -1184,6 +1184,7 @@ dependencies = [
  "pixelcore-claw",
  "pixelcore-runtime",
  "pixelcore-storage",
+ "pixelcore-swarm",
  "reqwest",
  "serde",
  "serde_json",
