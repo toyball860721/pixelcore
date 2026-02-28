@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 use crate::error::StorageError;
+use crate::encrypted_store::EncryptedStore;
 
 pub type StorageKey = String;
 pub type StorageValue = serde_json::Value;
@@ -9,6 +10,7 @@ pub type StorageValue = serde_json::Value;
 enum Backend {
     Memory(Arc<RwLock<HashMap<StorageKey, StorageValue>>>),
     Sled(sled::Db),
+    Encrypted(EncryptedStore),
 }
 
 #[derive(Clone)]
@@ -32,6 +34,18 @@ impl Storage {
         })
     }
 
+    /// 加密持久化模式，使用 SQLCipher 加密存储
+    ///
+    /// # Arguments
+    /// * `path` - 数据库文件路径
+    /// * `key` - 加密密钥（建议使用 32 字节的强密钥）
+    pub fn open_encrypted(path: impl AsRef<Path>, key: &str) -> Result<Self, StorageError> {
+        let store = EncryptedStore::open(path, key)?;
+        Ok(Self {
+            inner: Arc::new(Backend::Encrypted(store)),
+        })
+    }
+
     pub fn get(&self, key: &str) -> Result<StorageValue, StorageError> {
         match self.inner.as_ref() {
             Backend::Memory(map) => map
@@ -46,6 +60,7 @@ impl Storage {
                     .ok_or_else(|| StorageError::NotFound(key.to_string()))?;
                 Ok(serde_json::from_slice(&bytes)?)
             }
+            Backend::Encrypted(store) => store.get(key),
         }
     }
 
@@ -61,6 +76,7 @@ impl Storage {
                 db.insert(key, bytes)?;
                 Ok(())
             }
+            Backend::Encrypted(store) => store.set(&key, &value),
         }
     }
 
@@ -68,6 +84,7 @@ impl Storage {
         match self.inner.as_ref() {
             Backend::Memory(map) => Ok(map.write().unwrap().remove(key).is_some()),
             Backend::Sled(db) => Ok(db.remove(key)?.is_some()),
+            Backend::Encrypted(store) => store.delete(key),
         }
     }
 
@@ -75,6 +92,7 @@ impl Storage {
         match self.inner.as_ref() {
             Backend::Memory(map) => Ok(map.read().unwrap().contains_key(key)),
             Backend::Sled(db) => Ok(db.contains_key(key)?),
+            Backend::Encrypted(store) => store.contains(key),
         }
     }
 
@@ -90,6 +108,7 @@ impl Storage {
                     .collect();
                 Ok(keys)
             }
+            Backend::Encrypted(store) => store.keys(),
         }
     }
 }

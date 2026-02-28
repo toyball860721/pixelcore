@@ -10,6 +10,7 @@ members = [
     "crates/pixelcore-storage",
     "crates/pixelcore-ipc",
     "crates/pixelcore-agents",
+    "app/src-tauri",
 ]
 
 [workspace.package]
@@ -66,3 +67,6 @@ pixelcore-skills = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }
 pixelcore-agents = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"

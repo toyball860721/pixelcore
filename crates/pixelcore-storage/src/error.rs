@@ -13,4 +13,7 @@ pub enum StorageError {
 
     #[error("Sled error: {0}")]
     Sled(#[from] sled::Error),
+
+    #[error("SQLite error: {0}")]
+    Sqlite(#[from] rusqlite::Error),
 }

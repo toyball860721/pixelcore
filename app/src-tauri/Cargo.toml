@@ -1,0 +1,27 @@
+[package]
+name = "pixelcore-app"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["devtools"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# PixelCore dependencies
+pixelcore-runtime = { path = "../../crates/pixelcore-runtime" }
+pixelcore-swarm = { path = "../../crates/pixelcore-swarm" }
+pixelcore-heartbeat = { path = "../../crates/pixelcore-heartbeat" }
+pixelcore-storage = { path = "../../crates/pixelcore-storage" }
+pixelcore-agents = { path = "../../crates/pixelcore-agents" }
+pixelcore-skills = { path = "../../crates/pixelcore-skills" }
+pixelcore-claw = { path = "../../crates/pixelcore-claw" }
+anyhow = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }

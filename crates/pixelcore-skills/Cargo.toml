@@ -17,3 +17,5 @@ pixelcore-claw = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-swarm = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
+meval = "0.2"
+
