@@ -87,7 +87,7 @@
 - [x] Redis 操作
 
 #### 4.3 高级数据处理
-- [ ] Excel 读写
+- [x] Excel 读写
 - [ ] PDF 解析
 - [x] XML 处理
 - [x] YAML 处理
