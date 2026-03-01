@@ -177,9 +177,9 @@ impl WorkflowExecutor {
                     // 根据结果选择分支
                     self.execute_decision_branch(node_id, result).await?;
                 }
-                NodeType::Loop { .. } => {
-                    // 暂时不支持循环
-                    return Err("Loop nodes not yet supported".to_string());
+                NodeType::Loop { condition, max_iterations } => {
+                    // 执行循环节点
+                    self.execute_loop(node_id, condition, *max_iterations).await?;
                 }
                 NodeType::Parallel { .. } => {
                     // 暂时不支持并行
@@ -324,6 +324,67 @@ impl WorkflowExecutor {
 
         if let Some(node_id) = next_node_id {
             self.execute_from_node(node_id).await?;
+        }
+
+        Ok(())
+    }
+
+    /// 执行循环节点
+    async fn execute_loop(&self, node_id: Uuid, condition: &str, max_iterations: usize) -> Result<(), String> {
+        let mut iteration = 0;
+
+        loop {
+            // 检查是否达到最大迭代次数
+            if iteration >= max_iterations {
+                break;
+            }
+
+            // 评估循环条件
+            let should_continue = self.evaluate_condition(condition).await?;
+            if !should_continue {
+                break;
+            }
+
+            // 在上下文中设置当前迭代次数
+            {
+                let mut context = self.context.write().await;
+                context.set_variable(
+                    format!("loop_{}_iteration", node_id),
+                    serde_json::json!(iteration)
+                );
+            }
+
+            // 获取循环体节点（循环节点的Always出边）
+            let loop_body_nodes = {
+                let workflow = self.workflow.read().await;
+                let edges = workflow.get_outgoing_edges(&node_id);
+                edges.into_iter()
+                    .filter(|e| matches!(e.condition, EdgeCondition::Always))
+                    .map(|e| e.to)
+                    .collect::<Vec<_>>()
+            };
+
+            // 执行循环体中的所有节点
+            for body_node_id in loop_body_nodes {
+                self.execute_from_node(body_node_id).await?;
+            }
+
+            iteration += 1;
+        }
+
+        // 循环结束后，继续执行循环后的节点
+        // 查找Expression类型的出边（循环退出边）
+        let exit_nodes = {
+            let workflow = self.workflow.read().await;
+            let edges = workflow.get_outgoing_edges(&node_id);
+            edges.into_iter()
+                .filter(|e| matches!(e.condition, EdgeCondition::Expression { .. }))
+                .map(|e| e.to)
+                .collect::<Vec<_>>()
+        };
+
+        for exit_node_id in exit_nodes {
+            self.execute_from_node(exit_node_id).await?;
         }
 
         Ok(())
