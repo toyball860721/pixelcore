@@ -487,6 +487,45 @@ impl WorkflowExecutor {
     pub async fn get_context(&self) -> ExecutionContext {
         self.context.read().await.clone()
     }
+
+    /// 从保存的上下文恢复执行（断点续传）
+    pub fn from_checkpoint(workflow: Workflow, context: ExecutionContext) -> Self {
+        Self {
+            workflow: Arc::new(RwLock::new(workflow)),
+            context: Arc::new(RwLock::new(context)),
+        }
+    }
+
+    /// 恢复执行工作流（从当前节点继续）
+    pub async fn resume(&self) -> Result<ExecutionContext, String> {
+        // 验证工作流
+        let workflow = self.workflow.read().await;
+        workflow.validate()?;
+        drop(workflow);
+
+        // 获取当前节点
+        let current_node_id = {
+            let context = self.context.read().await;
+            context.current_node
+        };
+
+        if let Some(node_id) = current_node_id {
+            // 从当前节点继续执行
+            self.execute_from_node(node_id).await?;
+        } else {
+            // 如果没有当前节点，从开始节点执行
+            let workflow = self.workflow.read().await;
+            let start_node = workflow.find_start_node()
+                .ok_or("No start node found")?;
+            let start_id = start_node.id;
+            drop(workflow);
+            self.execute_from_node(start_id).await?;
+        }
+
+        // 返回执行上下文
+        let context = self.context.read().await;
+        Ok(context.clone())
+    }
 }
 
 #[cfg(test)]
