@@ -18,6 +18,7 @@ pixelcore-storage = { workspace = true }
 pixelcore-swarm = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 rusqlite = { workspace = true }
+redis = { workspace = true }
 meval = "0.2"
 
 [dev-dependencies]

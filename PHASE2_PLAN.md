@@ -82,7 +82,7 @@
 - [ ] Shell 命令执行 (受限)
 
 #### 4.2 数据库技能
-- [ ] SQLite 操作
+- [x] SQLite 操作
 - [ ] PostgreSQL 连接
 - [ ] Redis 操作
 

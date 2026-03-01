@@ -26,4 +26,9 @@ pub use builtins::{
     SqliteQuerySkill,
     SqliteExecuteSkill,
     create_sqlite_skills,
+    RedisGetSkill,
+    RedisSetSkill,
+    RedisDeleteSkill,
+    RedisExistsSkill,
+    create_redis_skills,
 };
