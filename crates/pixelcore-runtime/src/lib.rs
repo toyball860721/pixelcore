@@ -10,6 +10,7 @@ pub mod history_manager;
 pub mod message;
 pub mod message_bus;
 pub mod request_dedup;
+pub mod skill_preloader;
 pub mod smart_cache;
 pub mod streaming;
 pub mod task_scheduler;
@@ -27,6 +28,7 @@ pub use history_manager::{HistoryManager, HistoryConfig, HistoryEntry, HistorySt
 pub use message::{Message, MessageRole};
 pub use message_bus::{MessageBus, BusMessage};
 pub use request_dedup::RequestDeduplicator;
+pub use skill_preloader::{SkillPreloader, PreloaderConfig, PreloaderStats, PreloadResult};
 pub use smart_cache::{SmartCache, CacheConfig, CacheStats};
 pub use streaming::{StreamingResponse, StreamingSender, StreamingReceiver, ResponseChunk, ChunkType};
 pub use task_scheduler::{TaskScheduler, Task, TaskPriority, TaskStatus, SchedulerConfig};
