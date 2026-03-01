@@ -26,6 +26,15 @@ interface WorkflowInfo {
   updated_at: string;
 }
 
+interface WorkflowExecutionStatus {
+  workflow_id: string;
+  status: string;
+  current_node: string | null;
+  completed_nodes: string[];
+  failed_nodes: string[];
+  progress: number;
+}
+
 const initialNodes: Node[] = [
   {
     id: '1',
@@ -45,6 +54,8 @@ export default function WorkflowEditor() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [workflowName, setWorkflowName] = useState('');
   const [workflowDescription, setWorkflowDescription] = useState('');
+  const [executionStatus, setExecutionStatus] = useState<WorkflowExecutionStatus | null>(null);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   // 加载工作流列表
   const loadWorkflows = useCallback(async () => {
@@ -129,6 +140,66 @@ export default function WorkflowEditor() {
       position: { x: Math.random() * 400, y: Math.random() * 400 },
     };
     setNodes((nds) => nds.concat(newNode));
+  };
+
+  // 执行工作流
+  const executeWorkflow = async () => {
+    if (!selectedWorkflowId) {
+      alert('Please select a workflow first');
+      return;
+    }
+
+    try {
+      setIsExecuting(true);
+      await invoke('execute_workflow', { workflowId: selectedWorkflowId });
+
+      // 开始轮询执行状态
+      const intervalId = setInterval(async () => {
+        try {
+          const status = await invoke<WorkflowExecutionStatus>('get_workflow_execution_status', {
+            workflowId: selectedWorkflowId,
+          });
+          setExecutionStatus(status);
+
+          // 如果执行完成或失败，停止轮询
+          if (status.status === 'Completed' || status.status === 'Failed') {
+            clearInterval(intervalId);
+            setIsExecuting(false);
+          }
+        } catch (error) {
+          console.error('Failed to get execution status:', error);
+          clearInterval(intervalId);
+          setIsExecuting(false);
+        }
+      }, 1000); // 每秒更新一次
+
+      // 5分钟后自动停止轮询
+      setTimeout(() => {
+        clearInterval(intervalId);
+        setIsExecuting(false);
+      }, 300000);
+    } catch (error) {
+      console.error('Failed to execute workflow:', error);
+      alert(`Failed to execute workflow: ${error}`);
+      setIsExecuting(false);
+    }
+  };
+
+  // 停止工作流执行
+  const stopWorkflow = async () => {
+    if (!selectedWorkflowId) return;
+
+    try {
+      await invoke('update_workflow_status', {
+        workflowId: selectedWorkflowId,
+        status: 'Paused',
+      });
+      setIsExecuting(false);
+      alert('Workflow paused');
+    } catch (error) {
+      console.error('Failed to stop workflow:', error);
+      alert(`Failed to stop workflow: ${error}`);
+    }
   };
 
   return (
@@ -232,16 +303,69 @@ export default function WorkflowEditor() {
       {/* 右侧工作流画布 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* 工具栏 */}
-        <div style={{ padding: '10px', borderBottom: '1px solid #ddd', backgroundColor: '#f5f5f5' }}>
-          <button onClick={() => addNode('start')} style={{ marginRight: '10px', padding: '8px 16px' }}>
-            Add Start Node
-          </button>
-          <button onClick={() => addNode('task')} style={{ marginRight: '10px', padding: '8px 16px' }}>
-            Add Task Node
-          </button>
-          <button onClick={() => addNode('end')} style={{ padding: '8px 16px' }}>
-            Add End Node
-          </button>
+        <div style={{ padding: '10px', borderBottom: '1px solid #ddd', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <button onClick={() => addNode('start')} style={{ marginRight: '10px', padding: '8px 16px' }}>
+              Add Start Node
+            </button>
+            <button onClick={() => addNode('task')} style={{ marginRight: '10px', padding: '8px 16px' }}>
+              Add Task Node
+            </button>
+            <button onClick={() => addNode('end')} style={{ marginRight: '10px', padding: '8px 16px' }}>
+              Add End Node
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* 执行状态显示 */}
+            {executionStatus && (
+              <div style={{
+                padding: '8px 16px',
+                backgroundColor: executionStatus.status === 'Completed' ? '#d4edda' :
+                                 executionStatus.status === 'Failed' ? '#f8d7da' :
+                                 executionStatus.status === 'Active' ? '#fff3cd' : '#e2e3e5',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+              }}>
+                Status: {executionStatus.status} | Progress: {Math.round(executionStatus.progress * 100)}%
+              </div>
+            )}
+
+            {/* 执行/停止按钮 */}
+            {!isExecuting ? (
+              <button
+                onClick={executeWorkflow}
+                disabled={!selectedWorkflowId}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: selectedWorkflowId ? '#28a745' : '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: selectedWorkflowId ? 'pointer' : 'not-allowed',
+                  fontWeight: 'bold',
+                }}
+              >
+                ▶ Execute
+              </button>
+            ) : (
+              <button
+                onClick={stopWorkflow}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                ⏸ Pause
+              </button>
+            )}
+          </div>
         </div>
 
         {/* React Flow 画布 */}

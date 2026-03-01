@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use pixelcore_runtime::{Agent, AgentConfig, Message, RuntimeError};
-use pixelcore_runtime::workflow::{Workflow, WorkflowNode};
+use pixelcore_runtime::workflow::{Workflow, WorkflowNode, WorkflowStatus};
 use pixelcore_agents::ClaudeAgent;
 use pixelcore_storage::Storage;
 use pixelcore_claw::ClawClient;
@@ -324,6 +324,90 @@ async fn connect_workflow_nodes(
     Ok("Nodes connected successfully".to_string())
 }
 
+// 工作流执行状态
+#[derive(Clone, serde::Serialize)]
+struct WorkflowExecutionStatus {
+    workflow_id: String,
+    status: String,
+    current_node: Option<String>,
+    completed_nodes: Vec<String>,
+    failed_nodes: Vec<String>,
+    progress: f32,
+}
+
+// Tauri 命令：执行工作流
+#[tauri::command]
+async fn execute_workflow(
+    workflow_id: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let workflows = state.workflows.read().await;
+
+    let workflow = workflows
+        .get(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    // 验证工作流
+    workflow.validate().map_err(|e| e.to_string())?;
+
+    // TODO: 实际执行工作流（这里只是模拟）
+    // 在实际实现中，应该使用 WorkflowExecutor 来执行工作流
+
+    Ok(format!("Workflow {} execution started", workflow_id))
+}
+
+// Tauri 命令：获取工作流执行状态
+#[tauri::command]
+async fn get_workflow_execution_status(
+    workflow_id: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<WorkflowExecutionStatus, String> {
+    let workflows = state.workflows.read().await;
+
+    let workflow = workflows
+        .get(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    // TODO: 实际获取执行状态（这里只是模拟）
+    let status = WorkflowExecutionStatus {
+        workflow_id: workflow_id.clone(),
+        status: format!("{:?}", workflow.status),
+        current_node: None,
+        completed_nodes: vec![],
+        failed_nodes: vec![],
+        progress: 0.0,
+    };
+
+    Ok(status)
+}
+
+// Tauri 命令：更新工作流状态
+#[tauri::command]
+async fn update_workflow_status(
+    workflow_id: String,
+    status: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let mut workflows = state.workflows.write().await;
+
+    let workflow = workflows
+        .get_mut(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    // 更新工作流状态
+    use pixelcore_runtime::workflow::WorkflowStatus;
+    workflow.status = match status.as_str() {
+        "Draft" => WorkflowStatus::Draft,
+        "Active" => WorkflowStatus::Active,
+        "Paused" => WorkflowStatus::Paused,
+        "Completed" => WorkflowStatus::Completed,
+        "Failed" => WorkflowStatus::Failed,
+        _ => return Err(format!("Unknown status: {}", status)),
+    };
+
+    Ok(format!("Workflow {} status updated to {}", workflow_id, status))
+}
+
 fn main() {
     // 初始化日志
     tracing_subscriber::fmt()
@@ -355,6 +439,9 @@ fn main() {
             delete_workflow,
             add_workflow_node,
             connect_workflow_nodes,
+            execute_workflow,
+            get_workflow_execution_status,
+            update_workflow_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
