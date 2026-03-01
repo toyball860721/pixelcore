@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 use pixelcore_runtime::{Agent, AgentConfig, Message, RuntimeError};
+use pixelcore_runtime::workflow::{Workflow, WorkflowNode};
 use pixelcore_agents::ClaudeAgent;
 use pixelcore_storage::Storage;
 use pixelcore_claw::ClawClient;
@@ -39,6 +40,7 @@ struct AgentWrapper {
 // 应用状态
 struct AppState {
     agents: Arc<RwLock<HashMap<String, AgentWrapper>>>,
+    workflows: Arc<RwLock<HashMap<String, Workflow>>>,
 }
 
 // Tauri 命令：获取所有 Agent 信息
@@ -193,6 +195,135 @@ async fn get_available_skills() -> Result<Vec<String>, String> {
     Ok(skills)
 }
 
+// ========== 工作流相关命令 ==========
+
+// 工作流信息结构（用于前端显示）
+#[derive(Clone, serde::Serialize)]
+struct WorkflowInfo {
+    id: String,
+    name: String,
+    description: String,
+    status: String,
+    node_count: usize,
+    edge_count: usize,
+    created_at: String,
+    updated_at: String,
+}
+
+// Tauri 命令：创建新工作流
+#[tauri::command]
+async fn create_workflow(
+    name: String,
+    description: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let workflow = Workflow::new(name, description);
+    let workflow_id = workflow.id.to_string();
+
+    let mut workflows = state.workflows.write().await;
+    workflows.insert(workflow_id.clone(), workflow);
+
+    Ok(workflow_id)
+}
+
+// Tauri 命令：获取所有工作流
+#[tauri::command]
+async fn get_workflows(state: tauri::State<'_, AppState>) -> Result<Vec<WorkflowInfo>, String> {
+    let workflows = state.workflows.read().await;
+
+    let workflow_list: Vec<WorkflowInfo> = workflows
+        .iter()
+        .map(|(id, workflow)| WorkflowInfo {
+            id: id.clone(),
+            name: workflow.name.clone(),
+            description: workflow.description.clone(),
+            status: format!("{:?}", workflow.status),
+            node_count: workflow.nodes.len(),
+            edge_count: workflow.edges.len(),
+            created_at: workflow.created_at.to_rfc3339(),
+            updated_at: workflow.updated_at.to_rfc3339(),
+        })
+        .collect();
+
+    Ok(workflow_list)
+}
+
+// Tauri 命令：获取单个工作流详情
+#[tauri::command]
+async fn get_workflow(
+    workflow_id: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    let workflows = state.workflows.read().await;
+
+    let workflow = workflows
+        .get(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    serde_json::to_value(workflow).map_err(|e| e.to_string())
+}
+
+// Tauri 命令：删除工作流
+#[tauri::command]
+async fn delete_workflow(
+    workflow_id: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let mut workflows = state.workflows.write().await;
+
+    if workflows.remove(&workflow_id).is_some() {
+        Ok(format!("Workflow {} deleted", workflow_id))
+    } else {
+        Err(format!("Workflow {} not found", workflow_id))
+    }
+}
+
+// Tauri 命令：添加节点到工作流
+#[tauri::command]
+async fn add_workflow_node(
+    workflow_id: String,
+    node_name: String,
+    node_type: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let mut workflows = state.workflows.write().await;
+
+    let workflow = workflows
+        .get_mut(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    let node = match node_type.as_str() {
+        "start" => WorkflowNode::start(node_name),
+        "end" => WorkflowNode::end(node_name),
+        "task" => WorkflowNode::task(node_name, "default_task", serde_json::json!({})),
+        _ => return Err(format!("Unknown node type: {}", node_type)),
+    };
+
+    let node_id = workflow.add_node(node);
+    Ok(node_id.to_string())
+}
+
+// Tauri 命令：连接两个节点
+#[tauri::command]
+async fn connect_workflow_nodes(
+    workflow_id: String,
+    from_node_id: String,
+    to_node_id: String,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let mut workflows = state.workflows.write().await;
+
+    let workflow = workflows
+        .get_mut(&workflow_id)
+        .ok_or_else(|| format!("Workflow {} not found", workflow_id))?;
+
+    let from_uuid = Uuid::parse_str(&from_node_id).map_err(|e| e.to_string())?;
+    let to_uuid = Uuid::parse_str(&to_node_id).map_err(|e| e.to_string())?;
+
+    workflow.connect(from_uuid, to_uuid);
+    Ok("Nodes connected successfully".to_string())
+}
+
 fn main() {
     // 初始化日志
     tracing_subscriber::fmt()
@@ -205,6 +336,7 @@ fn main() {
     // 创建应用状态
     let app_state = AppState {
         agents: Arc::new(RwLock::new(HashMap::new())),
+        workflows: Arc::new(RwLock::new(HashMap::new())),
     };
 
     tauri::Builder::default()
@@ -216,6 +348,13 @@ fn main() {
             send_message,
             get_history,
             get_available_skills,
+            // 工作流命令
+            create_workflow,
+            get_workflows,
+            get_workflow,
+            delete_workflow,
+            add_workflow_node,
+            connect_workflow_nodes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

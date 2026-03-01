@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import './App.css'
+import WorkflowEditor from './WorkflowEditor'
 
 interface AgentInfo {
   id: string
@@ -17,6 +18,7 @@ interface ChatMessage {
 }
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'agents' | 'workflows'>('agents')
   const [agents, setAgents] = useState<AgentInfo[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -136,8 +138,53 @@ function App() {
 
   return (
     <div className="app">
-      {/* 侧边栏 */}
-      <div className="sidebar">
+      {/* 顶部导航栏 */}
+      <div style={{
+        display: 'flex',
+        borderBottom: '2px solid #ddd',
+        backgroundColor: '#f8f9fa',
+        padding: '0'
+      }}>
+        <button
+          onClick={() => setActiveTab('agents')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'agents' ? '#007bff' : 'transparent',
+            color: activeTab === 'agents' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'agents' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'agents' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          🤖 Agents
+        </button>
+        <button
+          onClick={() => setActiveTab('workflows')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'workflows' ? '#007bff' : 'transparent',
+            color: activeTab === 'workflows' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'workflows' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'workflows' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          🔄 Workflows
+        </button>
+      </div>
+
+      {/* 根据选中的标签页显示不同内容 */}
+      {activeTab === 'workflows' ? (
+        <WorkflowEditor />
+      ) : (
+        <>
+          {/* 原有的 Agent 聊天界面 */}
+          {/* 侧边栏 */}
+          <div className="sidebar">
         <div className="sidebar-header">
           <h1>PixelCore</h1>
           <button
@@ -296,6 +343,8 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   )
