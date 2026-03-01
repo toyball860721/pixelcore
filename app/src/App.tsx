@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import './App.css'
 import WorkflowEditor from './WorkflowEditor'
+import MonitoringDashboard from './MonitoringDashboard'
 
 interface AgentInfo {
   id: string
@@ -18,7 +19,7 @@ interface ChatMessage {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'agents' | 'workflows'>('agents')
+  const [activeTab, setActiveTab] = useState<'agents' | 'workflows' | 'monitoring'>('agents')
   const [agents, setAgents] = useState<AgentInfo[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -175,10 +176,27 @@ function App() {
         >
           🔄 Workflows
         </button>
+        <button
+          onClick={() => setActiveTab('monitoring')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'monitoring' ? '#007bff' : 'transparent',
+            color: activeTab === 'monitoring' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'monitoring' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'monitoring' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          📊 Monitoring
+        </button>
       </div>
 
       {/* 根据选中的标签页显示不同内容 */}
-      {activeTab === 'workflows' ? (
+      {activeTab === 'monitoring' ? (
+        <MonitoringDashboard />
+      ) : activeTab === 'workflows' ? (
         <WorkflowEditor />
       ) : (
         <>
