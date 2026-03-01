@@ -21,6 +21,8 @@ rusqlite = { workspace = true }
 redis = { workspace = true }
 serde_yaml = { workspace = true }
 quick-xml = { workspace = true }
+calamine = { workspace = true }
+rust_xlsxwriter = { workspace = true }
 meval = "0.2"
 
 [dev-dependencies]

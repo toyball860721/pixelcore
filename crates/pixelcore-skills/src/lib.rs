@@ -35,4 +35,7 @@ pub use builtins::{
     RedisDeleteSkill,
     RedisExistsSkill,
     create_redis_skills,
+    ExcelReadSkill,
+    ExcelWriteSkill,
+    create_excel_skills,
 };

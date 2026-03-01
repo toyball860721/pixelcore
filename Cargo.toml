@@ -40,6 +40,8 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
 serde_yaml = "0.9"
 quick-xml = { version = "0.36", features = ["serialize"] }
+calamine = "0.26"
+rust_xlsxwriter = "0.79"
 dotenvy = "0.15"
 pixelcore-runtime = { path = "crates/pixelcore-runtime" }
 pixelcore-swarm = { path = "crates/pixelcore-swarm" }
