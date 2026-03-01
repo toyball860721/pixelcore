@@ -24,6 +24,8 @@ pub use builtins::{
     CsvParseSkill,
     YamlParseSkill,
     YamlSerializeSkill,
+    XmlParseSkill,
+    XmlSerializeSkill,
     create_data_skills,
     SqliteQuerySkill,
     SqliteExecuteSkill,
