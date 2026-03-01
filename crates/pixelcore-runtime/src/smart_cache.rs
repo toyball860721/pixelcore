@@ -3,6 +3,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use chrono::{DateTime, Utc, Duration};
+use crate::cache_strategies::EvictionStrategy;
 
 /// 缓存配置
 #[derive(Debug, Clone)]
@@ -13,6 +14,8 @@ pub struct CacheConfig {
     pub default_ttl_secs: i64,
     /// 是否启用统计
     pub enable_stats: bool,
+    /// 淘汰策略
+    pub eviction_strategy: EvictionStrategy,
 }
 
 impl Default for CacheConfig {
@@ -21,6 +24,7 @@ impl Default for CacheConfig {
             max_entries: 1000,
             default_ttl_secs: 3600,  // 1小时
             enable_stats: true,
+            eviction_strategy: EvictionStrategy::LRU,
         }
     }
 }
@@ -116,9 +120,9 @@ impl<K: Eq + Hash + Clone, V: Clone> SmartCache<K, V> {
 
         entries.insert(key, entry);
 
-        // 如果超过最大条目数，执行LRU淘汰
+        // 如果超过最大条目数，执行淘汰
         if entries.len() > self.config.max_entries {
-            self.evict_lru(&mut entries);
+            self.evict(&mut entries).await;
         }
     }
 
@@ -151,19 +155,78 @@ impl<K: Eq + Hash + Clone, V: Clone> SmartCache<K, V> {
     }
 
     /// LRU淘汰策略
-    fn evict_lru(&self, entries: &mut HashMap<K, CacheEntry<V>>) {
+    async fn evict(&self, entries: &mut HashMap<K, CacheEntry<V>>) {
         if entries.is_empty() {
             return;
         }
 
-        // 找到最久未访问的条目
-        let lru_key = entries
-            .iter()
-            .min_by_key(|(_, entry)| entry.last_accessed)
-            .map(|(k, _)| k.clone());
+        // 根据配置的策略选择淘汰的key
+        let victim_key = match self.config.eviction_strategy {
+            EvictionStrategy::LRU => {
+                // 找到最久未访问的条目
+                entries
+                    .iter()
+                    .min_by_key(|(_, entry)| entry.last_accessed)
+                    .map(|(k, _)| k.clone())
+            }
+            EvictionStrategy::LFU => {
+                // 找到访问次数最少的条目
+                entries
+                    .iter()
+                    .min_by_key(|(_, entry)| entry.access_count)
+                    .map(|(k, _)| k.clone())
+            }
+            EvictionStrategy::FIFO => {
+                // 找到最早创建的条目
+                entries
+                    .iter()
+                    .min_by_key(|(_, entry)| entry.created_at)
+                    .map(|(k, _)| k.clone())
+            }
+        };
 
-        if let Some(key) = lru_key {
+        if let Some(key) = victim_key {
             entries.remove(&key);
+            // 记录淘汰次数
+            if self.config.enable_stats {
+                let mut stats = self.stats.write().await;
+                stats.evictions += 1;
+            }
+        }
+    }
+
+    /// 批量获取缓存值
+    pub async fn get_many(&self, keys: &[K]) -> HashMap<K, V> {
+        let mut result = HashMap::new();
+        for key in keys {
+            if let Some(value) = self.get(key).await {
+                result.insert(key.clone(), value);
+            }
+        }
+        result
+    }
+
+    /// 批量设置缓存值
+    pub async fn set_many(&self, items: Vec<(K, V)>) {
+        for (key, value) in items {
+            self.set(key, value).await;
+        }
+    }
+
+    /// 缓存预热 - 批量加载数据到缓存
+    pub async fn warmup<F, Fut>(&self, keys: Vec<K>, loader: F)
+    where
+        F: Fn(K) -> Fut,
+        Fut: std::future::Future<Output = Option<V>>,
+    {
+        for key in keys {
+            // 检查是否已经在缓存中
+            if self.get(&key).await.is_none() {
+                // 加载数据
+                if let Some(value) = loader(key.clone()).await {
+                    self.set(key, value).await;
+                }
+            }
         }
     }
 
@@ -193,6 +256,7 @@ impl<K: Eq + Hash + Clone, V: Clone> SmartCache<K, V> {
             misses: stats.misses,
             size: entries.len(),
             max_size: self.config.max_entries,
+            evictions: stats.evictions,
         }
     }
 
@@ -215,6 +279,7 @@ pub struct CacheStats {
     pub misses: usize,
     pub size: usize,
     pub max_size: usize,
+    pub evictions: usize,
 }
 
 impl CacheStats {
@@ -253,6 +318,7 @@ mod tests {
             max_entries: 100,
             default_ttl_secs: 1,  // 1秒TTL
             enable_stats: true,
+            eviction_strategy: EvictionStrategy::LRU,
         };
         let cache = SmartCache::new(config);
 
@@ -276,6 +342,7 @@ mod tests {
             max_entries: 3,
             default_ttl_secs: 3600,
             enable_stats: false,
+            eviction_strategy: EvictionStrategy::LRU,
         };
         let cache = SmartCache::new(config);
 
@@ -322,5 +389,92 @@ mod tests {
 
         let hit_rate = cache.hit_rate().await;
         assert!((hit_rate - 0.666).abs() < 0.01);
+    }
+
+    #[tokio::test]
+    async fn test_cache_lfu_eviction() {
+        let config = CacheConfig {
+            max_entries: 3,
+            default_ttl_secs: 3600,
+            enable_stats: true,
+            eviction_strategy: EvictionStrategy::LFU,
+        };
+        let cache = SmartCache::new(config);
+
+        // 添加3个条目
+        cache.set("key1".to_string(), "value1".to_string()).await;
+        cache.set("key2".to_string(), "value2".to_string()).await;
+        cache.set("key3".to_string(), "value3".to_string()).await;
+
+        // 访问key1和key2多次，使key3成为最少访问
+        cache.get(&"key1".to_string()).await;
+        cache.get(&"key1".to_string()).await;
+        cache.get(&"key2".to_string()).await;
+
+        // 添加第4个条目，应该淘汰key3（最少访问）
+        cache.set("key4".to_string(), "value4".to_string()).await;
+
+        let size = cache.size().await;
+        assert_eq!(size, 3);
+
+        // key3应该被淘汰
+        let key3 = cache.get(&"key3".to_string()).await;
+        assert_eq!(key3, None);
+
+        // key1应该还在
+        let key1 = cache.get(&"key1".to_string()).await;
+        assert_eq!(key1, Some("value1".to_string()));
+
+        // 检查淘汰统计
+        let stats = cache.stats().await;
+        assert_eq!(stats.evictions, 1);
+    }
+
+    #[tokio::test]
+    async fn test_cache_batch_operations() {
+        let config = CacheConfig::default();
+        let cache = SmartCache::new(config);
+
+        // 批量设置
+        let items = vec![
+            ("key1".to_string(), "value1".to_string()),
+            ("key2".to_string(), "value2".to_string()),
+            ("key3".to_string(), "value3".to_string()),
+        ];
+        cache.set_many(items).await;
+
+        // 批量获取
+        let keys = vec!["key1".to_string(), "key2".to_string(), "key3".to_string()];
+        let results = cache.get_many(&keys).await;
+
+        assert_eq!(results.len(), 3);
+        assert_eq!(results.get(&"key1".to_string()), Some(&"value1".to_string()));
+        assert_eq!(results.get(&"key2".to_string()), Some(&"value2".to_string()));
+        assert_eq!(results.get(&"key3".to_string()), Some(&"value3".to_string()));
+    }
+
+    #[tokio::test]
+    async fn test_cache_warmup() {
+        let config = CacheConfig::default();
+        let cache = SmartCache::new(config);
+
+        // 模拟数据加载器
+        let loader = |key: String| async move {
+            Some(format!("loaded_{}", key))
+        };
+
+        // 预热缓存
+        let keys = vec!["key1".to_string(), "key2".to_string(), "key3".to_string()];
+        cache.warmup(keys, loader).await;
+
+        // 验证数据已加载
+        let value1 = cache.get(&"key1".to_string()).await;
+        assert_eq!(value1, Some("loaded_key1".to_string()));
+
+        let value2 = cache.get(&"key2".to_string()).await;
+        assert_eq!(value2, Some("loaded_key2".to_string()));
+
+        let value3 = cache.get(&"key3".to_string()).await;
+        assert_eq!(value3, Some("loaded_key3".to_string()));
     }
 }

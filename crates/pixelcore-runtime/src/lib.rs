@@ -1,6 +1,7 @@
 pub mod agent;
 pub mod agent_pool;
 pub mod batch_processor;
+pub mod cache_strategies;
 pub mod connection_pool;
 pub mod error;
 pub mod event;
@@ -17,6 +18,7 @@ pub mod workflow;
 pub use agent::{Agent, AgentId, AgentState, AgentConfig};
 pub use agent_pool::{AgentPool, AgentPoolConfig, AgentPoolStats, PooledAgent};
 pub use batch_processor::{BatchProcessor, BatchConfig, BatchStats};
+pub use cache_strategies::{EvictionStrategy, EvictionPolicy, LRUPolicy, LFUPolicy, FIFOPolicy, EntryMetadata};
 pub use connection_pool::{ConnectionPool, PoolStats};
 pub use error::RuntimeError;
 pub use event::{Event, EventBus, EventKind};
