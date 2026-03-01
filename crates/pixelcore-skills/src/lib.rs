@@ -43,4 +43,8 @@ pub use builtins::{
     PostgresQuerySkill,
     PostgresExecuteSkill,
     create_postgres_skills,
+    PythonExecuteSkill,
+    JavaScriptExecuteSkill,
+    ShellExecuteSkill,
+    create_code_execution_skills,
 };
