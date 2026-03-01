@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use std::collections::HashMap;
-use chrono::{DateTime, Utc};
+
+use super::error_handling::ErrorHandlingStrategy;
 
 /// 工作流节点类型
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,6 +43,7 @@ pub struct WorkflowNode {
     pub id: Uuid,
     pub name: String,
     pub node_type: NodeType,
+    pub error_handling: ErrorHandlingStrategy,
     pub metadata: serde_json::Value,
 }
 
@@ -52,8 +53,14 @@ impl WorkflowNode {
             id: Uuid::new_v4(),
             name: name.into(),
             node_type,
+            error_handling: ErrorHandlingStrategy::default(),
             metadata: serde_json::Value::Null,
         }
+    }
+
+    pub fn with_error_handling(mut self, strategy: ErrorHandlingStrategy) -> Self {
+        self.error_handling = strategy;
+        self
     }
 
     pub fn start(name: impl Into<String>) -> Self {

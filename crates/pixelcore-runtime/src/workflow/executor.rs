@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tokio::time::{sleep, Duration};
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use super::workflow::Workflow;
 use super::node::{NodeType, WorkflowNode};
 use super::edge::{EdgeCondition, WorkflowEdge};
+use super::error_handling::{ErrorHandlingStrategy, RetryPolicy};
 
 /// 执行状态
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -128,17 +130,45 @@ impl WorkflowExecutor {
                     context.completed_at = Some(Utc::now());
                 }
                 NodeType::Task { task_name, params } => {
-                    // 执行任务节点
-                    let result = self.execute_task(task_name, params).await?;
+                    // 执行任务节点（带错误处理）
+                    let result = self.execute_task_with_error_handling(
+                        node_id,
+                        task_name,
+                        params,
+                        &node.error_handling
+                    ).await;
 
-                    // 保存结果
-                    {
-                        let mut context = self.context.write().await;
-                        context.set_node_result(node_id, result);
+                    match result {
+                        Ok(task_result) => {
+                            // 保存结果
+                            {
+                                let mut context = self.context.write().await;
+                                context.set_node_result(node_id, task_result);
+                            }
+
+                            // 继续执行下一个节点
+                            self.execute_next_nodes(node_id).await?;
+                        }
+                        Err(e) => {
+                            // 根据错误处理策略决定是否继续
+                            match &node.error_handling {
+                                ErrorHandlingStrategy::Fail => {
+                                    let mut context = self.context.write().await;
+                                    context.status = ExecutionStatus::Failed;
+                                    context.error = Some(e.clone());
+                                    return Err(e);
+                                }
+                                ErrorHandlingStrategy::Ignore => {
+                                    // 忽略错误，继续执行
+                                    self.execute_next_nodes(node_id).await?;
+                                }
+                                _ => {
+                                    // 其他策略已在 execute_task_with_error_handling 中处理
+                                    return Err(e);
+                                }
+                            }
+                        }
                     }
-
-                    // 继续执行下一个节点
-                    self.execute_next_nodes(node_id).await?;
                 }
                 NodeType::Decision { condition } => {
                     // 执行决策节点
@@ -199,6 +229,61 @@ impl WorkflowExecutor {
             "params": params,
             "result": "success"
         }))
+    }
+
+    /// 带错误处理的任务执行
+    async fn execute_task_with_error_handling(
+        &self,
+        node_id: Uuid,
+        task_name: &str,
+        params: &serde_json::Value,
+        strategy: &ErrorHandlingStrategy,
+    ) -> Result<serde_json::Value, String> {
+        match strategy {
+            ErrorHandlingStrategy::Retry { policy } => {
+                self.execute_task_with_retry(task_name, params, policy).await
+            }
+            ErrorHandlingStrategy::Fallback { fallback_node } => {
+                match self.execute_task(task_name, params).await {
+                    Ok(result) => Ok(result),
+                    Err(_) => {
+                        // 跳转到 fallback 节点
+                        // 这里需要解析 fallback_node 字符串为 Uuid
+                        Err(format!("Fallback to node: {}", fallback_node))
+                    }
+                }
+            }
+            _ => {
+                // Fail 和 Ignore 策略在调用方处理
+                self.execute_task(task_name, params).await
+            }
+        }
+    }
+
+    /// 带重试的任务执行
+    async fn execute_task_with_retry(
+        &self,
+        task_name: &str,
+        params: &serde_json::Value,
+        policy: &RetryPolicy,
+    ) -> Result<serde_json::Value, String> {
+        let mut last_error = String::new();
+
+        for attempt in 0..=policy.max_retries {
+            match self.execute_task(task_name, params).await {
+                Ok(result) => return Ok(result),
+                Err(e) => {
+                    last_error = e;
+
+                    if attempt < policy.max_retries {
+                        let delay = policy.calculate_delay(attempt);
+                        sleep(Duration::from_millis(delay)).await;
+                    }
+                }
+            }
+        }
+
+        Err(format!("Task failed after {} retries: {}", policy.max_retries, last_error))
     }
 
     /// 评估条件

@@ -12,4 +12,8 @@ pub use event::{Event, EventBus, EventKind};
 pub use message::{Message, MessageRole};
 pub use message_bus::{MessageBus, BusMessage};
 pub use task_scheduler::{TaskScheduler, Task, TaskPriority, TaskStatus, SchedulerConfig};
-pub use workflow::{Workflow, WorkflowStatus, WorkflowNode, WorkflowEdge, NodeType, EdgeCondition, WorkflowExecutor, ExecutionContext, ExecutionStatus};
+pub use workflow::{
+    Workflow, WorkflowStatus, WorkflowNode, WorkflowEdge, NodeType, EdgeCondition,
+    WorkflowExecutor, ExecutionContext, ExecutionStatus,
+    ErrorHandlingStrategy, RetryPolicy
+};
