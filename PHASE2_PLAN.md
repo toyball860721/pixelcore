@@ -83,7 +83,7 @@
 
 #### 4.2 数据库技能
 - [x] SQLite 操作
-- [ ] PostgreSQL 连接
+- [x] PostgreSQL 连接
 - [x] Redis 操作
 
 #### 4.3 高级数据处理
