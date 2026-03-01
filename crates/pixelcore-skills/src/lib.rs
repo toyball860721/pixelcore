@@ -40,4 +40,7 @@ pub use builtins::{
     create_excel_skills,
     PdfExtractSkill,
     create_pdf_skills,
+    PostgresQuerySkill,
+    PostgresExecuteSkill,
+    create_postgres_skills,
 };

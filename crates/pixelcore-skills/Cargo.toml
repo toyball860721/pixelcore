@@ -24,6 +24,7 @@ quick-xml = { workspace = true }
 calamine = { workspace = true }
 rust_xlsxwriter = { workspace = true }
 pdf-extract = { workspace = true }
+tokio-postgres = { workspace = true }
 meval = "0.2"
 
 [dev-dependencies]
