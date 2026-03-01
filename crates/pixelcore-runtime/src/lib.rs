@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod agent_pool;
+pub mod batch_processor;
 pub mod error;
 pub mod event;
 pub mod history_manager;
@@ -12,6 +13,7 @@ pub mod workflow;
 
 pub use agent::{Agent, AgentId, AgentState, AgentConfig};
 pub use agent_pool::{AgentPool, AgentPoolConfig, AgentPoolStats, PooledAgent};
+pub use batch_processor::{BatchProcessor, BatchConfig, BatchStats};
 pub use error::RuntimeError;
 pub use event::{Event, EventBus, EventKind};
 pub use history_manager::{HistoryManager, HistoryConfig, HistoryEntry, HistoryStats};
