@@ -23,4 +23,7 @@ pub use builtins::{
     JsonQuerySkill,
     CsvParseSkill,
     create_data_skills,
+    SqliteQuerySkill,
+    SqliteExecuteSkill,
+    create_sqlite_skills,
 };

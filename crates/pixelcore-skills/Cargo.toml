@@ -17,5 +17,9 @@ pixelcore-claw = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-swarm = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
+rusqlite = { workspace = true }
 meval = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
 
