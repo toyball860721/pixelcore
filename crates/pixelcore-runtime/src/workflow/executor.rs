@@ -181,9 +181,9 @@ impl WorkflowExecutor {
                     // 执行循环节点
                     self.execute_loop(node_id, condition, *max_iterations).await?;
                 }
-                NodeType::Parallel { .. } => {
-                    // 暂时不支持并行
-                    return Err("Parallel nodes not yet supported".to_string());
+                NodeType::Parallel { branches } => {
+                    // 执行并行节点
+                    self.execute_parallel(node_id, *branches).await?;
                 }
             }
 
@@ -388,6 +388,99 @@ impl WorkflowExecutor {
         }
 
         Ok(())
+    }
+
+    /// 执行并行节点
+    async fn execute_parallel(&self, node_id: Uuid, branches: usize) -> Result<(), String> {
+        // 获取所有并行分支的节点
+        let branch_nodes = {
+            let workflow = self.workflow.read().await;
+            let edges = workflow.get_outgoing_edges(&node_id);
+
+            // 收集所有ParallelBranch类型的边
+            let mut nodes = Vec::new();
+            for i in 0..branches {
+                for edge in &edges {
+                    if let EdgeCondition::ParallelBranch { index } = edge.condition {
+                        if index == i {
+                            nodes.push(edge.to);
+                            break;
+                        }
+                    }
+                }
+            }
+            nodes
+        };
+
+        // 如果没有找到足够的分支，使用Always边
+        let branch_nodes = if branch_nodes.is_empty() {
+            let workflow = self.workflow.read().await;
+            let edges = workflow.get_outgoing_edges(&node_id);
+            edges.into_iter()
+                .filter(|e| matches!(e.condition, EdgeCondition::Always))
+                .take(branches)
+                .map(|e| e.to)
+                .collect::<Vec<_>>()
+        } else {
+            branch_nodes
+        };
+
+        // 并行执行所有分支
+        let mut handles = Vec::new();
+        for branch_node_id in branch_nodes {
+            let executor = self.clone_for_parallel();
+            let handle = tokio::spawn(async move {
+                executor.execute_from_node(branch_node_id).await
+            });
+            handles.push(handle);
+        }
+
+        // 等待所有分支完成
+        let mut errors = Vec::new();
+        for (i, handle) in handles.into_iter().enumerate() {
+            match handle.await {
+                Ok(Ok(())) => {
+                    // 分支成功完成
+                }
+                Ok(Err(e)) => {
+                    errors.push(format!("Branch {} failed: {}", i, e));
+                }
+                Err(e) => {
+                    errors.push(format!("Branch {} panicked: {}", i, e));
+                }
+            }
+        }
+
+        // 如果有任何分支失败，返回错误
+        if !errors.is_empty() {
+            return Err(format!("Parallel execution failed: {}", errors.join(", ")));
+        }
+
+        // 并行执行完成后，继续执行后续节点
+        // 查找非ParallelBranch和非Always的出边（汇聚节点）
+        let next_nodes = {
+            let workflow = self.workflow.read().await;
+            let edges = workflow.get_outgoing_edges(&node_id);
+            edges.into_iter()
+                .filter(|e| !matches!(e.condition, EdgeCondition::ParallelBranch { .. })
+                         && !matches!(e.condition, EdgeCondition::Always))
+                .map(|e| e.to)
+                .collect::<Vec<_>>()
+        };
+
+        for next_node_id in next_nodes {
+            self.execute_from_node(next_node_id).await?;
+        }
+
+        Ok(())
+    }
+
+    /// 为并行执行克隆executor
+    fn clone_for_parallel(&self) -> Self {
+        Self {
+            workflow: Arc::clone(&self.workflow),
+            context: Arc::clone(&self.context),
+        }
     }
 
     /// 获取执行上下文
