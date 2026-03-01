@@ -22,6 +22,8 @@ pub use builtins::{
     JsonParseSkill,
     JsonQuerySkill,
     CsvParseSkill,
+    YamlParseSkill,
+    YamlSerializeSkill,
     create_data_skills,
     SqliteQuerySkill,
     SqliteExecuteSkill,
