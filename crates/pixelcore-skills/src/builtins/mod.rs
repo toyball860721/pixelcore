@@ -9,6 +9,7 @@ pub mod data;
 pub mod sqlite;
 pub mod redis;
 pub mod excel;
+pub mod pdf;
 
 pub use echo::EchoSkill;
 pub use storage::{StorageGetSkill, StorageSetSkill};
@@ -21,4 +22,5 @@ pub use data::{JsonParseSkill, JsonQuerySkill, CsvParseSkill, YamlParseSkill, Ya
 pub use sqlite::{SqliteQuerySkill, SqliteExecuteSkill, create_sqlite_skills};
 pub use redis::{RedisGetSkill, RedisSetSkill, RedisDeleteSkill, RedisExistsSkill, create_redis_skills};
 pub use excel::{ExcelReadSkill, ExcelWriteSkill, create_excel_skills};
+pub use pdf::{PdfExtractSkill, create_pdf_skills};
 

@@ -38,4 +38,6 @@ pub use builtins::{
     ExcelReadSkill,
     ExcelWriteSkill,
     create_excel_skills,
+    PdfExtractSkill,
+    create_pdf_skills,
 };
