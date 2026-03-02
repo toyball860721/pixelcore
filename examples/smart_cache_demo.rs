@@ -1,4 +1,5 @@
 use pixelcore_runtime::{SmartCache, CacheConfig};
+use pixelcore_runtime::cache_strategies::EvictionStrategy;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -9,6 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         max_entries: 5,
         default_ttl_secs: 10,  // 10秒TTL
         enable_stats: true,
+        eviction_strategy: EvictionStrategy::LRU,
     };
 
     println!("Cache Configuration:");
