@@ -10,6 +10,7 @@ members = [
     "crates/pixelcore-storage",
     "crates/pixelcore-ipc",
     "crates/pixelcore-agents",
+    "crates/pixelcore-registry",
     "app/src-tauri",
 ]
 
@@ -53,6 +54,7 @@ pixelcore-skills = { path = "crates/pixelcore-skills" }
 pixelcore-storage = { path = "crates/pixelcore-storage" }
 pixelcore-ipc = { path = "crates/pixelcore-ipc" }
 pixelcore-agents = { path = "crates/pixelcore-agents" }
+pixelcore-registry = { path = "crates/pixelcore-registry" }
 
 [package]
 name = "pixelcore"
@@ -67,6 +69,7 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 dotenvy = { workspace = true }
+uuid = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-swarm = { workspace = true }
 pixelcore-heartbeat = { workspace = true }
@@ -75,6 +78,7 @@ pixelcore-skills = { workspace = true }
 pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }
 pixelcore-agents = { workspace = true }
+pixelcore-registry = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
