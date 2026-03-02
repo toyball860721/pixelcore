@@ -12,6 +12,7 @@ members = [
     "crates/pixelcore-agents",
     "crates/pixelcore-registry",
     "crates/pixelcore-marketplace",
+    "crates/pixelcore-reputation",
     "app/src-tauri",
 ]
 
@@ -57,6 +58,7 @@ pixelcore-ipc = { path = "crates/pixelcore-ipc" }
 pixelcore-agents = { path = "crates/pixelcore-agents" }
 pixelcore-registry = { path = "crates/pixelcore-registry" }
 pixelcore-marketplace = { path = "crates/pixelcore-marketplace" }
+pixelcore-reputation = { path = "crates/pixelcore-reputation" }
 
 [package]
 name = "pixelcore"
