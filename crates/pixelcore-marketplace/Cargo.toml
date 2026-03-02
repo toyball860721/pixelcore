@@ -1,0 +1,18 @@
+[package]
+name = "pixelcore-marketplace"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+async-trait = { workspace = true }
+pixelcore-registry = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"

@@ -11,6 +11,7 @@ members = [
     "crates/pixelcore-ipc",
     "crates/pixelcore-agents",
     "crates/pixelcore-registry",
+    "crates/pixelcore-marketplace",
     "app/src-tauri",
 ]
 
@@ -55,6 +56,7 @@ pixelcore-storage = { path = "crates/pixelcore-storage" }
 pixelcore-ipc = { path = "crates/pixelcore-ipc" }
 pixelcore-agents = { path = "crates/pixelcore-agents" }
 pixelcore-registry = { path = "crates/pixelcore-registry" }
+pixelcore-marketplace = { path = "crates/pixelcore-marketplace" }
 
 [package]
 name = "pixelcore"
@@ -79,6 +81,7 @@ pixelcore-storage = { workspace = true }
 pixelcore-ipc = { workspace = true }
 pixelcore-agents = { workspace = true }
 pixelcore-registry = { workspace = true }
+pixelcore-marketplace = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

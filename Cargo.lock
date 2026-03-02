@@ -2945,6 +2945,7 @@ dependencies = [
  "pixelcore-claw",
  "pixelcore-heartbeat",
  "pixelcore-ipc",
+ "pixelcore-marketplace",
  "pixelcore-registry",
  "pixelcore-runtime",
  "pixelcore-skills",
@@ -3045,6 +3046,22 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "pixelcore-marketplace"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "pixelcore-registry",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
  "uuid",
 ]
 
