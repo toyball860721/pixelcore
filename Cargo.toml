@@ -23,6 +23,7 @@ members = [
     "crates/pixelcore-compliance",
     "crates/pixelcore-monitoring",
     "crates/pixelcore-logging",
+    "crates/pixelcore-backup",
     "app/src-tauri",
 ]
 
@@ -79,6 +80,7 @@ pixelcore-security = { path = "crates/pixelcore-security" }
 pixelcore-compliance = { path = "crates/pixelcore-compliance" }
 pixelcore-monitoring = { path = "crates/pixelcore-monitoring" }
 pixelcore-logging = { path = "crates/pixelcore-logging" }
+pixelcore-backup = { path = "crates/pixelcore-backup" }
 
 [package]
 name = "pixelcore"
@@ -115,6 +117,7 @@ pixelcore-security = { workspace = true }
 pixelcore-compliance = { workspace = true }
 pixelcore-monitoring = { workspace = true }
 pixelcore-logging = { workspace = true }
+pixelcore-backup = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
