@@ -21,6 +21,7 @@ members = [
     "crates/pixelcore-auth",
     "crates/pixelcore-security",
     "crates/pixelcore-compliance",
+    "crates/pixelcore-monitoring",
     "app/src-tauri",
 ]
 
@@ -75,6 +76,7 @@ pixelcore-tenant = { path = "crates/pixelcore-tenant" }
 pixelcore-auth = { path = "crates/pixelcore-auth" }
 pixelcore-security = { path = "crates/pixelcore-security" }
 pixelcore-compliance = { path = "crates/pixelcore-compliance" }
+pixelcore-monitoring = { path = "crates/pixelcore-monitoring" }
 
 [package]
 name = "pixelcore"
@@ -109,6 +111,7 @@ pixelcore-tenant = { workspace = true }
 pixelcore-auth = { workspace = true }
 pixelcore-security = { workspace = true }
 pixelcore-compliance = { workspace = true }
+pixelcore-monitoring = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
