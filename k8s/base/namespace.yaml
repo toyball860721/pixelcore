@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pixelcore
+  labels:
+    name: pixelcore
+    environment: production

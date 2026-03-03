@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pixelcore-config
+  namespace: pixelcore
+data:
+  # Backend configuration
+  RUST_LOG: "info"
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "8080"
+
+  # Database configuration
+  DATABASE_HOST: "postgres-service"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "pixelcore"
+
+  # Redis configuration
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+
+  # Application configuration
+  APP_ENV: "production"

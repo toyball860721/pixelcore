@@ -1,0 +1,16 @@
+apiVersion: v2
+name: pixelcore
+description: A Helm chart for PixelCore application
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - pixelcore
+  - agent
+  - marketplace
+home: https://github.com/your-org/pixelcore
+sources:
+  - https://github.com/your-org/pixelcore
+maintainers:
+  - name: PixelCore Team
+    email: team@pixelcore.example.com
