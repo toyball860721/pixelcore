@@ -17,6 +17,8 @@ members = [
     "crates/pixelcore-contract",
     "crates/pixelcore-payment",
     "crates/pixelcore-billing",
+    "crates/pixelcore-tenant",
+    "crates/pixelcore-auth",
     "app/src-tauri",
 ]
 
@@ -67,6 +69,8 @@ pixelcore-transaction = { path = "crates/pixelcore-transaction" }
 pixelcore-contract = { path = "crates/pixelcore-contract" }
 pixelcore-payment = { path = "crates/pixelcore-payment" }
 pixelcore-billing = { path = "crates/pixelcore-billing" }
+pixelcore-tenant = { path = "crates/pixelcore-tenant" }
+pixelcore-auth = { path = "crates/pixelcore-auth" }
 
 [package]
 name = "pixelcore"
@@ -97,6 +101,8 @@ pixelcore-transaction = { workspace = true }
 pixelcore-contract = { workspace = true }
 pixelcore-payment = { workspace = true }
 pixelcore-billing = { workspace = true }
+pixelcore-tenant = { workspace = true }
+pixelcore-auth = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

@@ -2943,6 +2943,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "pixelcore-agents",
+ "pixelcore-auth",
  "pixelcore-billing",
  "pixelcore-claw",
  "pixelcore-contract",
@@ -2955,6 +2956,7 @@ dependencies = [
  "pixelcore-skills",
  "pixelcore-storage",
  "pixelcore-swarm",
+ "pixelcore-tenant",
  "pixelcore-transaction",
  "serde",
  "serde_json",
@@ -3002,6 +3004,18 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "pixelcore-auth"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
  "uuid",
 ]
 
@@ -3225,6 +3239,19 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "pixelcore-tenant"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
  "uuid",
 ]
 
