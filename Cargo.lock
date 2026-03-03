@@ -2940,17 +2940,22 @@ name = "pixelcore"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "dotenvy",
  "pixelcore-agents",
+ "pixelcore-billing",
  "pixelcore-claw",
+ "pixelcore-contract",
  "pixelcore-heartbeat",
  "pixelcore-ipc",
  "pixelcore-marketplace",
+ "pixelcore-payment",
  "pixelcore-registry",
  "pixelcore-runtime",
  "pixelcore-skills",
  "pixelcore-storage",
  "pixelcore-swarm",
+ "pixelcore-transaction",
  "serde",
  "serde_json",
  "tempfile",
@@ -3001,6 +3006,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pixelcore-billing"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "pixelcore-claw"
 version = "0.1.0"
 dependencies = [
@@ -3014,6 +3032,22 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "pixelcore-contract"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "pixelcore-transaction",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
  "uuid",
 ]
 
@@ -3057,6 +3091,20 @@ dependencies = [
  "async-trait",
  "chrono",
  "pixelcore-registry",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "pixelcore-payment"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "rusqlite",
  "serde",
  "serde_json",
  "tempfile",

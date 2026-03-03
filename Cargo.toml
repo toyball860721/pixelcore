@@ -14,6 +14,9 @@ members = [
     "crates/pixelcore-marketplace",
     "crates/pixelcore-reputation",
     "crates/pixelcore-transaction",
+    "crates/pixelcore-contract",
+    "crates/pixelcore-payment",
+    "crates/pixelcore-billing",
     "app/src-tauri",
 ]
 
@@ -60,6 +63,10 @@ pixelcore-agents = { path = "crates/pixelcore-agents" }
 pixelcore-registry = { path = "crates/pixelcore-registry" }
 pixelcore-marketplace = { path = "crates/pixelcore-marketplace" }
 pixelcore-reputation = { path = "crates/pixelcore-reputation" }
+pixelcore-transaction = { path = "crates/pixelcore-transaction" }
+pixelcore-contract = { path = "crates/pixelcore-contract" }
+pixelcore-payment = { path = "crates/pixelcore-payment" }
+pixelcore-billing = { path = "crates/pixelcore-billing" }
 
 [package]
 name = "pixelcore"
@@ -75,6 +82,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 dotenvy = { workspace = true }
 uuid = { workspace = true }
+chrono = { workspace = true }
 pixelcore-runtime = { workspace = true }
 pixelcore-swarm = { workspace = true }
 pixelcore-heartbeat = { workspace = true }
@@ -85,6 +93,10 @@ pixelcore-ipc = { workspace = true }
 pixelcore-agents = { workspace = true }
 pixelcore-registry = { workspace = true }
 pixelcore-marketplace = { workspace = true }
+pixelcore-transaction = { workspace = true }
+pixelcore-contract = { workspace = true }
+pixelcore-payment = { workspace = true }
+pixelcore-billing = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
