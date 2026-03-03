@@ -4,6 +4,9 @@ import './App.css'
 import WorkflowEditor from './WorkflowEditor'
 import MonitoringDashboard from './MonitoringDashboard'
 import ConfigurationPanel from './ConfigurationPanel'
+import Marketplace from './pages/Marketplace'
+import MerchantDashboard from './pages/MerchantDashboard'
+import UserCenter from './pages/UserCenter'
 
 interface AgentInfo {
   id: string
@@ -20,7 +23,7 @@ interface ChatMessage {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'agents' | 'workflows' | 'monitoring' | 'config'>('agents')
+  const [activeTab, setActiveTab] = useState<'agents' | 'workflows' | 'monitoring' | 'config' | 'marketplace' | 'merchant' | 'user'>('agents')
   const [agents, setAgents] = useState<AgentInfo[]>([])
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -207,10 +210,61 @@ function App() {
         >
           ⚙️ Configuration
         </button>
+        <button
+          onClick={() => setActiveTab('marketplace')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'marketplace' ? '#007bff' : 'transparent',
+            color: activeTab === 'marketplace' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'marketplace' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'marketplace' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          🏪 Marketplace
+        </button>
+        <button
+          onClick={() => setActiveTab('merchant')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'merchant' ? '#007bff' : 'transparent',
+            color: activeTab === 'merchant' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'merchant' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'merchant' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          📊 Merchant
+        </button>
+        <button
+          onClick={() => setActiveTab('user')}
+          style={{
+            padding: '15px 30px',
+            border: 'none',
+            backgroundColor: activeTab === 'user' ? '#007bff' : 'transparent',
+            color: activeTab === 'user' ? 'white' : '#333',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: activeTab === 'user' ? 'bold' : 'normal',
+            borderBottom: activeTab === 'user' ? '3px solid #0056b3' : 'none',
+          }}
+        >
+          👤 User Center
+        </button>
       </div>
 
       {/* 根据选中的标签页显示不同内容 */}
-      {activeTab === 'config' ? (
+      {activeTab === 'user' ? (
+        <UserCenter />
+      ) : activeTab === 'merchant' ? (
+        <MerchantDashboard />
+      ) : activeTab === 'marketplace' ? (
+        <Marketplace />
+      ) : activeTab === 'config' ? (
         <ConfigurationPanel />
       ) : activeTab === 'monitoring' ? (
         <MonitoringDashboard />
