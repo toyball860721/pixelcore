@@ -25,6 +25,7 @@ members = [
     "crates/pixelcore-logging",
     "crates/pixelcore-backup",
     "crates/pixelcore-sdk",
+    "crates/pixelcore-cache",
     "app/src-tauri",
 ]
 
