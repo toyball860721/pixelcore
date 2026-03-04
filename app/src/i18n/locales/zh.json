@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "PixelCore",
+    "welcome": "欢迎使用 PixelCore",
+    "description": "高性能图像处理平台"
+  },
+  "nav": {
+    "home": "首页",
+    "dashboard": "仪表板",
+    "monitoring": "监控",
+    "config": "配置",
+    "settings": "设置"
+  },
+  "dashboard": {
+    "title": "BI 仪表板",
+    "metrics": "指标",
+    "charts": "图表",
+    "reports": "报告",
+    "export": "导出",
+    "refresh": "刷新"
+  },
+  "monitoring": {
+    "title": "系统监控",
+    "cpu": "CPU 使用率",
+    "memory": "内存使用率",
+    "disk": "磁盘使用率",
+    "network": "网络流量",
+    "requests": "每秒请求数",
+    "latency": "平均延迟",
+    "errors": "错误率"
+  },
+  "config": {
+    "title": "配置",
+    "general": "常规",
+    "performance": "性能",
+    "security": "安全",
+    "save": "保存",
+    "cancel": "取消",
+    "reset": "重置"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "warning": "警告",
+    "info": "信息",
+    "confirm": "确认",
+    "yes": "是",
+    "no": "否",
+    "ok": "确定",
+    "close": "关闭"
+  }
+}

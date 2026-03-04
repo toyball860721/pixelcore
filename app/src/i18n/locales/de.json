@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "PixelCore",
+    "welcome": "Willkommen bei PixelCore",
+    "description": "Hochleistungs-Bildverarbeitungsplattform"
+  },
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "monitoring": "Überwachung",
+    "config": "Konfiguration",
+    "settings": "Einstellungen"
+  },
+  "dashboard": {
+    "title": "BI-Dashboard",
+    "metrics": "Metriken",
+    "charts": "Diagramme",
+    "reports": "Berichte",
+    "export": "Exportieren",
+    "refresh": "Aktualisieren"
+  },
+  "monitoring": {
+    "title": "Systemüberwachung",
+    "cpu": "CPU-Auslastung",
+    "memory": "Speicherauslastung",
+    "disk": "Festplattenauslastung",
+    "network": "Netzwerkverkehr",
+    "requests": "Anfragen pro Sekunde",
+    "latency": "Durchschnittliche Latenz",
+    "errors": "Fehlerrate"
+  },
+  "config": {
+    "title": "Konfiguration",
+    "general": "Allgemein",
+    "performance": "Leistung",
+    "security": "Sicherheit",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "reset": "Zurücksetzen"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "warning": "Warnung",
+    "info": "Information",
+    "confirm": "Bestätigen",
+    "yes": "Ja",
+    "no": "Nein",
+    "ok": "OK",
+    "close": "Schließen"
+  }
+}

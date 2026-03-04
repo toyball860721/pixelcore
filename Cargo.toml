@@ -29,6 +29,7 @@ members = [
     "crates/pixelcore-ai",
     "crates/pixelcore-search",
     "crates/pixelcore-analytics",
+    "crates/pixelcore-i18n",
     "app/src-tauri",
 ]
 
@@ -90,6 +91,7 @@ pixelcore-sdk = { path = "crates/pixelcore-sdk" }
 pixelcore-ai = { path = "crates/pixelcore-ai" }
 pixelcore-search = { path = "crates/pixelcore-search" }
 pixelcore-analytics = { path = "crates/pixelcore-analytics" }
+pixelcore-i18n = { path = "crates/pixelcore-i18n" }
 
 [package]
 name = "pixelcore"

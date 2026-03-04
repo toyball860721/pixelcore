@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "PixelCore",
+    "welcome": "PixelCore에 오신 것을 환영합니다",
+    "description": "고성능 이미지 처리 플랫폼"
+  },
+  "nav": {
+    "home": "홈",
+    "dashboard": "대시보드",
+    "monitoring": "모니터링",
+    "config": "구성",
+    "settings": "설정"
+  },
+  "dashboard": {
+    "title": "BI 대시보드",
+    "metrics": "메트릭",
+    "charts": "차트",
+    "reports": "보고서",
+    "export": "내보내기",
+    "refresh": "새로고침"
+  },
+  "monitoring": {
+    "title": "시스템 모니터링",
+    "cpu": "CPU 사용률",
+    "memory": "메모리 사용률",
+    "disk": "디스크 사용률",
+    "network": "네트워크 트래픽",
+    "requests": "초당 요청 수",
+    "latency": "평균 지연 시간",
+    "errors": "오류율"
+  },
+  "config": {
+    "title": "구성",
+    "general": "일반",
+    "performance": "성능",
+    "security": "보안",
+    "save": "저장",
+    "cancel": "취소",
+    "reset": "재설정"
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "warning": "경고",
+    "info": "정보",
+    "confirm": "확인",
+    "yes": "예",
+    "no": "아니오",
+    "ok": "확인",
+    "close": "닫기"
+  }
+}

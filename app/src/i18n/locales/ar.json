@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "PixelCore",
+    "welcome": "مرحبا بك في PixelCore",
+    "description": "منصة معالجة الصور عالية الأداء"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "monitoring": "المراقبة",
+    "config": "التكوين",
+    "settings": "الإعدادات"
+  },
+  "dashboard": {
+    "title": "لوحة معلومات BI",
+    "metrics": "المقاييس",
+    "charts": "الرسوم البيانية",
+    "reports": "التقارير",
+    "export": "تصدير",
+    "refresh": "تحديث"
+  },
+  "monitoring": {
+    "title": "مراقبة النظام",
+    "cpu": "استخدام المعالج",
+    "memory": "استخدام الذاكرة",
+    "disk": "استخدام القرص",
+    "network": "حركة الشبكة",
+    "requests": "الطلبات في الثانية",
+    "latency": "متوسط الكمون",
+    "errors": "معدل الخطأ"
+  },
+  "config": {
+    "title": "التكوين",
+    "general": "عام",
+    "performance": "الأداء",
+    "security": "الأمان",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "reset": "إعادة تعيين"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "موافق",
+    "close": "إغلاق"
+  }
+}

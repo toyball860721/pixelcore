@@ -1,0 +1,53 @@
+{
+  "app": {
+    "title": "PixelCore",
+    "welcome": "Bienvenue sur PixelCore",
+    "description": "Plateforme de traitement d'images haute performance"
+  },
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "monitoring": "Surveillance",
+    "config": "Configuration",
+    "settings": "Paramètres"
+  },
+  "dashboard": {
+    "title": "Tableau de bord BI",
+    "metrics": "Métriques",
+    "charts": "Graphiques",
+    "reports": "Rapports",
+    "export": "Exporter",
+    "refresh": "Actualiser"
+  },
+  "monitoring": {
+    "title": "Surveillance du système",
+    "cpu": "Utilisation CPU",
+    "memory": "Utilisation mémoire",
+    "disk": "Utilisation disque",
+    "network": "Trafic réseau",
+    "requests": "Requêtes par seconde",
+    "latency": "Latence moyenne",
+    "errors": "Taux d'erreur"
+  },
+  "config": {
+    "title": "Configuration",
+    "general": "Général",
+    "performance": "Performance",
+    "security": "Sécurité",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "reset": "Réinitialiser"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Avertissement",
+    "info": "Information",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "close": "Fermer"
+  }
+}
