@@ -1,0 +1,39 @@
+[package]
+name = "pixelcore-search"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.41", features = ["full"] }
+async-trait = "0.1"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Search engine
+tantivy = "0.22"
+
+# HTTP client for Meilisearch
+reqwest = { version = "0.12", features = ["json"] }
+
+# Text processing
+unicode-segmentation = "1.12"
+
+# Logging
+tracing = "0.1"
+
+# UUID
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
+# Redis for caching
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
