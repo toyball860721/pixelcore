@@ -26,6 +26,7 @@ members = [
     "crates/pixelcore-backup",
     "crates/pixelcore-sdk",
     "crates/pixelcore-cache",
+    "crates/pixelcore-ai",
     "app/src-tauri",
 ]
 
@@ -84,6 +85,7 @@ pixelcore-monitoring = { path = "crates/pixelcore-monitoring" }
 pixelcore-logging = { path = "crates/pixelcore-logging" }
 pixelcore-backup = { path = "crates/pixelcore-backup" }
 pixelcore-sdk = { path = "crates/pixelcore-sdk" }
+pixelcore-ai = { path = "crates/pixelcore-ai" }
 
 [package]
 name = "pixelcore"
