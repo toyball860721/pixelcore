@@ -20,6 +20,16 @@ pub enum RegionId {
     ApSoutheast2,
     /// South America - São Paulo
     SaEast1,
+    /// China - Beijing
+    CnNorth1,
+    /// China - Shanghai
+    CnEast1,
+    /// China - Shenzhen
+    CnSouth1,
+    /// China - Chengdu
+    CnSouthwest1,
+    /// China - Hong Kong
+    CnHongKong1,
 }
 
 impl RegionId {
@@ -34,6 +44,11 @@ impl RegionId {
             RegionId::ApSoutheast1,
             RegionId::ApSoutheast2,
             RegionId::SaEast1,
+            RegionId::CnNorth1,
+            RegionId::CnEast1,
+            RegionId::CnSouth1,
+            RegionId::CnSouthwest1,
+            RegionId::CnHongKong1,
         ]
     }
 
@@ -48,6 +63,11 @@ impl RegionId {
             RegionId::ApSoutheast1 => "ap-southeast-1",
             RegionId::ApSoutheast2 => "ap-southeast-2",
             RegionId::SaEast1 => "sa-east-1",
+            RegionId::CnNorth1 => "cn-north-1",
+            RegionId::CnEast1 => "cn-east-1",
+            RegionId::CnSouth1 => "cn-south-1",
+            RegionId::CnSouthwest1 => "cn-southwest-1",
+            RegionId::CnHongKong1 => "cn-hongkong-1",
         }
     }
 
@@ -62,6 +82,11 @@ impl RegionId {
             RegionId::ApSoutheast1 => "Asia Pacific (Singapore)",
             RegionId::ApSoutheast2 => "Asia Pacific (Sydney)",
             RegionId::SaEast1 => "South America (São Paulo)",
+            RegionId::CnNorth1 => "China North (Beijing)",
+            RegionId::CnEast1 => "China East (Shanghai)",
+            RegionId::CnSouth1 => "China South (Shenzhen)",
+            RegionId::CnSouthwest1 => "China Southwest (Chengdu)",
+            RegionId::CnHongKong1 => "China (Hong Kong)",
         }
     }
 
@@ -76,6 +101,11 @@ impl RegionId {
             RegionId::ApSoutheast1 => (1.3521, 103.8198),  // Singapore
             RegionId::ApSoutheast2 => (-33.8688, 151.2093), // Sydney
             RegionId::SaEast1 => (-23.5505, -46.6333),     // São Paulo
+            RegionId::CnNorth1 => (39.9042, 116.4074),     // Beijing
+            RegionId::CnEast1 => (31.2304, 121.4737),      // Shanghai
+            RegionId::CnSouth1 => (22.5431, 114.0579),     // Shenzhen
+            RegionId::CnSouthwest1 => (30.5728, 104.0668), // Chengdu
+            RegionId::CnHongKong1 => (22.3193, 114.1694),  // Hong Kong
         }
     }
 
@@ -90,6 +120,11 @@ impl RegionId {
             "ap-southeast-1" => Some(RegionId::ApSoutheast1),
             "ap-southeast-2" => Some(RegionId::ApSoutheast2),
             "sa-east-1" => Some(RegionId::SaEast1),
+            "cn-north-1" => Some(RegionId::CnNorth1),
+            "cn-east-1" => Some(RegionId::CnEast1),
+            "cn-south-1" => Some(RegionId::CnSouth1),
+            "cn-southwest-1" => Some(RegionId::CnSouthwest1),
+            "cn-hongkong-1" => Some(RegionId::CnHongKong1),
             _ => None,
         }
     }
@@ -176,7 +211,7 @@ mod tests {
     #[test]
     fn test_region_all() {
         let regions = RegionId::all();
-        assert_eq!(regions.len(), 8);
+        assert_eq!(regions.len(), 13); // 8 original + 5 China regions
     }
 
     #[test]
