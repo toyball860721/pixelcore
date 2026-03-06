@@ -1,0 +1,59 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: pixelcore
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: pixelcore-api-authz
+  namespace: pixelcore
+spec:
+  selector:
+    matchLabels:
+      app: pixelcore-api
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/pixelcore/sa/pixelcore-frontend"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        paths: ["/api/*"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all-default
+  namespace: pixelcore
+spec:
+  action: DENY
+  rules:
+  - from:
+    - source:
+        notNamespaces: ["pixelcore", "istio-system"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-ratelimit-config
+  namespace: pixelcore
+data:
+  config.yaml: |
+    domain: pixelcore-ratelimit
+    descriptors:
+      - key: header_match
+        value: "api"
+        rate_limit:
+          unit: minute
+          requests_per_unit: 1000
+      - key: header_match
+        value: "search"
+        rate_limit:
+          unit: minute
+          requests_per_unit: 5000

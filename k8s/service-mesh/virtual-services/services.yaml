@@ -1,0 +1,108 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: pixelcore-api
+  namespace: pixelcore
+spec:
+  hosts:
+  - "api.pixelcore.io"
+  - "api.pixelcore.cn"
+  gateways:
+  - pixelcore-gateway
+  - pixelcore-gateway-cn
+  http:
+  - match:
+    - headers:
+        x-api-version:
+          exact: "v2"
+    route:
+    - destination:
+        host: pixelcore-api
+        subset: v2
+      weight: 100
+  - route:
+    - destination:
+        host: pixelcore-api
+        subset: v1
+      weight: 90
+    - destination:
+        host: pixelcore-api
+        subset: v2
+      weight: 10
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+      retryOn: 5xx,reset,connect-failure,refused-stream
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: pixelcore-search
+  namespace: pixelcore
+spec:
+  hosts:
+  - "search.pixelcore.io"
+  - "search.pixelcore.cn"
+  gateways:
+  - pixelcore-gateway
+  - pixelcore-gateway-cn
+  http:
+  - match:
+    - uri:
+        prefix: "/api/v1/search"
+    route:
+    - destination:
+        host: pixelcore-search
+        port:
+          number: 8080
+    timeout: 5s
+    retries:
+      attempts: 2
+      perTryTimeout: 2s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: pixelcore-ai
+  namespace: pixelcore
+spec:
+  hosts:
+  - "ai.pixelcore.io"
+  - "ai.pixelcore.cn"
+  gateways:
+  - pixelcore-gateway
+  - pixelcore-gateway-cn
+  http:
+  - match:
+    - uri:
+        prefix: "/api/v1/recommend"
+    route:
+    - destination:
+        host: pixelcore-ai
+        port:
+          number: 8080
+    timeout: 10s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: pixelcore-analytics
+  namespace: pixelcore
+spec:
+  hosts:
+  - "analytics.pixelcore.io"
+  - "analytics.pixelcore.cn"
+  gateways:
+  - pixelcore-gateway
+  - pixelcore-gateway-cn
+  http:
+  - match:
+    - uri:
+        prefix: "/api/v1/analytics"
+    route:
+    - destination:
+        host: pixelcore-analytics
+        port:
+          number: 8080
+    timeout: 30s
