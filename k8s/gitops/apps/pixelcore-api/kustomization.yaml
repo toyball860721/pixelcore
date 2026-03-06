@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+
+namespace: pixelcore
+
+commonLabels:
+  app.kubernetes.io/name: pixelcore-api
+  app.kubernetes.io/part-of: pixelcore
+  app.kubernetes.io/managed-by: argocd
+
+images:
+- name: pixelcore/api
+  newTag: v1.0.0

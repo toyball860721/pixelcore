@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: pixelcore
+  namespace: argocd
+spec:
+  description: PixelCore Project
+  sourceRepos:
+  - 'https://github.com/toyball860721/pixelcore.git'
+  destinations:
+  - namespace: 'pixelcore'
+    server: 'https://kubernetes.default.svc'
+  - namespace: 'pixelcore-dev'
+    server: 'https://kubernetes.default.svc'
+  - namespace: 'pixelcore-staging'
+    server: 'https://kubernetes.default.svc'
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pixelcore-dev
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pixelcore-staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pixelcore
