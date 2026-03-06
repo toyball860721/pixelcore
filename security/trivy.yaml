@@ -1,0 +1,44 @@
+# Trivy configuration for container scanning
+
+# Scan settings
+severity:
+  - CRITICAL
+  - HIGH
+  - MEDIUM
+  - LOW
+
+# Vulnerability database
+db:
+  repository: ghcr.io/aquasecurity/trivy-db
+  skip-update: false
+
+# Scan targets
+scan:
+  security-checks:
+    - vuln
+    - config
+    - secret
+
+  # Skip files
+  skip-files:
+    - "**/*.md"
+    - "**/*.txt"
+    - "**/test/**"
+    - "**/tests/**"
+
+# Output format
+format: json
+
+# Exit code
+exit-code: 1  # Fail on vulnerabilities
+
+# Ignore unfixed vulnerabilities
+ignore-unfixed: false
+
+# Timeout
+timeout: 5m
+
+# Cache
+cache:
+  dir: /tmp/trivy-cache
+  ttl: 24h
