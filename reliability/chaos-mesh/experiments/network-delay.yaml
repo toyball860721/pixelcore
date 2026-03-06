@@ -1,0 +1,87 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: database-network-delay
+  namespace: pixelcore
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  delay:
+    latency: '100ms'
+    correlation: '50'
+    jitter: '50ms'
+  direction: to
+  target:
+    mode: all
+    selector:
+      namespaces:
+        - pixelcore
+      labelSelectors:
+        app: postgres-ha
+  duration: '5m'
+  scheduler:
+    cron: '@weekly'
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: redis-network-delay
+  namespace: pixelcore
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  delay:
+    latency: '50ms'
+    correlation: '25'
+    jitter: '25ms'
+  direction: to
+  target:
+    mode: all
+    selector:
+      namespaces:
+        - pixelcore
+      labelSelectors:
+        app: redis-ha
+  duration: '5m'
+  scheduler:
+    cron: '@weekly'
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-partition
+  namespace: pixelcore
+spec:
+  action: partition
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  direction: both
+  target:
+    mode: one
+    selector:
+      namespaces:
+        - pixelcore
+      labelSelectors:
+        app: postgres-ha
+  duration: '30s'
+  scheduler:
+    cron: '@monthly'
+  paused: true

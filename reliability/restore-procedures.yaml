@@ -1,0 +1,100 @@
+---
+# Full cluster restore template
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: full-cluster-restore-template
+  namespace: velero
+spec:
+  # Set backupName to the backup you want to restore from
+  backupName: BACKUP_NAME_HERE
+  includedNamespaces:
+    - "*"
+  includedResources:
+    - "*"
+  includeClusterResources: true
+  restorePVs: true
+  preserveNodePorts: true
+  existingResourcePolicy: update
+
+---
+# Namespace-specific restore template
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: namespace-restore-template
+  namespace: velero
+spec:
+  backupName: BACKUP_NAME_HERE
+  includedNamespaces:
+    - pixelcore
+  includedResources:
+    - "*"
+  restorePVs: true
+  existingResourcePolicy: update
+
+---
+# Selective resource restore template
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: selective-restore-template
+  namespace: velero
+spec:
+  backupName: BACKUP_NAME_HERE
+  includedNamespaces:
+    - pixelcore
+  includedResources:
+    - deployments
+    - statefulsets
+    - configmaps
+    - secrets
+  labelSelector:
+    matchLabels:
+      app: backend
+  restorePVs: false
+  existingResourcePolicy: update
+
+---
+# Database point-in-time recovery template
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: database-pitr-template
+  namespace: velero
+spec:
+  backupName: BACKUP_NAME_HERE
+  includedNamespaces:
+    - pixelcore
+  includedResources:
+    - statefulsets
+    - persistentvolumeclaims
+    - configmaps
+    - secrets
+  labelSelector:
+    matchLabels:
+      app: postgres
+  restorePVs: true
+  preserveNodePorts: false
+  existingResourcePolicy: update
+  hooks:
+    resources:
+      - name: postgres-restore-hook
+        includedNamespaces:
+          - pixelcore
+        labelSelector:
+          matchLabels:
+            app: postgres
+        postHooks:
+          - exec:
+              container: postgres
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  # Wait for PostgreSQL to be ready
+                  until pg_isready; do sleep 2; done
+                  # Verify data integrity
+                  psql -U postgres -c "SELECT COUNT(*) FROM pg_stat_database;"
+              onError: Fail
+              timeout: 5m

@@ -1,0 +1,60 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: backend-retry-policy
+  namespace: pixelcore
+spec:
+  hosts:
+    - backend-service
+  http:
+    - route:
+        - destination:
+            host: backend-service
+            port:
+              number: 8080
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: 5xx,reset,connect-failure,refused-stream,retriable-4xx
+      timeout: 10s
+      fault:
+        delay:
+          percentage:
+            value: 0.0
+          fixedDelay: 0s
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: postgres-retry-policy
+  namespace: pixelcore
+spec:
+  hosts:
+    - postgres-ha-service
+  tcp:
+    - match:
+        - port: 5432
+      route:
+        - destination:
+            host: postgres-ha-service
+            port:
+              number: 5432
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: redis-retry-policy
+  namespace: pixelcore
+spec:
+  hosts:
+    - redis-ha-service
+  tcp:
+    - match:
+        - port: 6379
+      route:
+        - destination:
+            host: redis-ha-service
+            port:
+              number: 6379

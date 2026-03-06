@@ -1,0 +1,32 @@
+---
+# VolumeSnapshotClass for CSI snapshots
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: velero-snapshot-class
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: ebs.csi.aws.com  # Change based on cloud provider
+deletionPolicy: Retain
+parameters:
+  # Snapshot retention and tagging
+  tagSpecification_1: "Name=velero-backup"
+  tagSpecification_2: "ManagedBy=velero"
+
+---
+# StorageClass with snapshot capabilities
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast-snapshot
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: ebs.csi.aws.com  # Change based on cloud provider
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain

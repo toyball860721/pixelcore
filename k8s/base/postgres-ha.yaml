@@ -1,0 +1,205 @@
+---
+# PostgreSQL HA Service (headless for StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-ha-service
+  namespace: pixelcore
+  labels:
+    app: postgres-ha
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  clusterIP: None
+  selector:
+    app: postgres-ha
+
+---
+# PostgreSQL HA Read-Only Service (for read replicas)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-ha-read
+  namespace: pixelcore
+  labels:
+    app: postgres-ha
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: postgres-ha
+    role: replica
+
+---
+# PostgreSQL HA ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-ha-config
+  namespace: pixelcore
+data:
+  # Primary configuration
+  primary.conf: |
+    wal_level = replica
+    max_wal_senders = 10
+    max_replication_slots = 10
+    hot_standby = on
+    synchronous_commit = on
+    synchronous_standby_names = 'ANY 1 (*)'
+
+  # Replica configuration
+  replica.conf: |
+    hot_standby = on
+    hot_standby_feedback = on
+
+---
+# PostgreSQL HA StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-ha
+  namespace: pixelcore
+spec:
+  serviceName: postgres-ha-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres-ha
+  template:
+    metadata:
+      labels:
+        app: postgres-ha
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: postgres-ha
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: pixelcore
+            - name: POSTGRES_USER
+              value: pixelcore
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: config
+              mountPath: /etc/postgresql
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - pixelcore
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  pg_isready -U pixelcore && \
+                  [ $(psql -U pixelcore -tAc "SELECT CASE WHEN pg_is_in_recovery() THEN (SELECT EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp()))) ELSE 0 END") -lt 5 ]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: config
+          configMap:
+            name: postgres-ha-config
+        - name: init-scripts
+          configMap:
+            name: postgres-ha-init
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+# PostgreSQL HA Init Scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-ha-init
+  namespace: pixelcore
+data:
+  setup-replication.sh: |
+    #!/bin/bash
+    set -e
+
+    # Determine if this is the primary (postgres-ha-0)
+    if [ "$POD_NAME" = "postgres-ha-0" ]; then
+      echo "Setting up as PRIMARY"
+      cat /etc/postgresql/primary.conf >> /var/lib/postgresql/data/pgdata/postgresql.conf
+
+      # Create replication user
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD '$REPLICATION_PASSWORD';
+      EOSQL
+    else
+      echo "Setting up as REPLICA"
+      # Wait for primary to be ready
+      until pg_isready -h postgres-ha-0.postgres-ha-service -U pixelcore; do
+        echo "Waiting for primary..."
+        sleep 2
+      done
+
+      # Setup streaming replication
+      rm -rf /var/lib/postgresql/data/pgdata/*
+      pg_basebackup -h postgres-ha-0.postgres-ha-service -D /var/lib/postgresql/data/pgdata -U replicator -v -P -W
+
+      cat /etc/postgresql/replica.conf >> /var/lib/postgresql/data/pgdata/postgresql.conf
+
+      # Create standby.signal for PostgreSQL 12+
+      touch /var/lib/postgresql/data/pgdata/standby.signal
+
+      # Configure primary connection
+      cat >> /var/lib/postgresql/data/pgdata/postgresql.conf <<-EOF
+      primary_conninfo = 'host=postgres-ha-0.postgres-ha-service port=5432 user=replicator password=$REPLICATION_PASSWORD'
+      EOF
+    fi

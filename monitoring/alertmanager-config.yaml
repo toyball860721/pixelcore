@@ -1,0 +1,227 @@
+---
+# AlertManager ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      # Slack webhook URL (set via environment variable or secret)
+      slack_api_url: '${SLACK_WEBHOOK_URL}'
+
+    # Route tree for alert routing
+    route:
+      receiver: 'default'
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      routes:
+        # Critical alerts - immediate notification
+        - match:
+            severity: critical
+          receiver: 'critical-alerts'
+          group_wait: 0s
+          repeat_interval: 5m
+
+        # Warning alerts - grouped notification
+        - match:
+            severity: warning
+          receiver: 'warning-alerts'
+          group_wait: 30s
+          repeat_interval: 1h
+
+        # Info alerts - daily digest
+        - match:
+            severity: info
+          receiver: 'info-alerts'
+          group_wait: 5m
+          repeat_interval: 24h
+
+    # Inhibition rules to reduce alert noise
+    inhibit_rules:
+      # Inhibit warning if critical is firing
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'cluster', 'service']
+
+      # Inhibit pod alerts if node is down
+      - source_match:
+          alertname: 'NodeNotReady'
+        target_match_re:
+          alertname: 'Pod.*'
+        equal: ['node']
+
+      # Inhibit service down if all backends are down
+      - source_match:
+          alertname: 'NoHealthyBackends'
+        target_match:
+          alertname: 'ServiceDown'
+
+    # Receivers for different alert types
+    receivers:
+      - name: 'default'
+        slack_configs:
+          - channel: '#alerts'
+            title: 'PixelCore Alert'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+      - name: 'critical-alerts'
+        slack_configs:
+          - channel: '#alerts-critical'
+            title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+            text: |
+              *Severity:* Critical
+              *Cluster:* {{ .GroupLabels.cluster }}
+              *Service:* {{ .GroupLabels.service }}
+
+              {{ range .Alerts }}
+              *Alert:* {{ .Labels.alertname }}
+              *Description:* {{ .Annotations.description }}
+              *Started:* {{ .StartsAt }}
+              {{ end }}
+            send_resolved: true
+        # Add email notification for critical alerts
+        email_configs:
+          - to: 'oncall@example.com'
+            from: 'alertmanager@pixelcore.com'
+            smarthost: 'smtp.example.com:587'
+            auth_username: 'alertmanager@pixelcore.com'
+            auth_password: '${SMTP_PASSWORD}'
+            headers:
+              Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+
+      - name: 'warning-alerts'
+        slack_configs:
+          - channel: '#alerts-warning'
+            title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+            text: |
+              *Severity:* Warning
+              *Cluster:* {{ .GroupLabels.cluster }}
+
+              {{ range .Alerts }}
+              *Alert:* {{ .Labels.alertname }}
+              *Description:* {{ .Annotations.description }}
+              {{ end }}
+            send_resolved: true
+
+      - name: 'info-alerts'
+        slack_configs:
+          - channel: '#alerts-info'
+            title: 'ℹ️ INFO: {{ .GroupLabels.alertname }}'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+---
+# AlertManager Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+            - '--cluster.advertise-address=$(POD_IP):9094'
+            - '--cluster.listen-address=0.0.0.0:9094'
+          ports:
+            - containerPort: 9093
+              name: http
+            - containerPort: 9094
+              name: cluster
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-secrets
+                  key: slack-webhook-url
+                  optional: true
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-secrets
+                  key: smtp-password
+                  optional: true
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: storage
+              mountPath: /alertmanager
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9093
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+        - name: storage
+          emptyDir: {}
+
+---
+# AlertManager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+spec:
+  ports:
+    - port: 9093
+      targetPort: 9093
+      name: http
+    - port: 9094
+      targetPort: 9094
+      name: cluster
+  selector:
+    app: alertmanager
+
+---
+# AlertManager Secrets Template (create manually with actual values)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-secrets
+  namespace: monitoring
+type: Opaque
+stringData:
+  slack-webhook-url: "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+  smtp-password: "your-smtp-password"

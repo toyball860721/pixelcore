@@ -1,0 +1,289 @@
+---
+# Redis HA Service (headless for StatefulSet)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ha-service
+  namespace: pixelcore
+  labels:
+    app: redis-ha
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: redis
+  clusterIP: None
+  selector:
+    app: redis-ha
+
+---
+# Redis Sentinel Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-sentinel-service
+  namespace: pixelcore
+  labels:
+    app: redis-sentinel
+spec:
+  ports:
+    - port: 26379
+      targetPort: 26379
+      name: sentinel
+  clusterIP: None
+  selector:
+    app: redis-sentinel
+
+---
+# Redis HA ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-ha-config
+  namespace: pixelcore
+data:
+  redis.conf: |
+    bind 0.0.0.0
+    port 6379
+    appendonly yes
+    appendfilename "appendonly.aof"
+    dir /data
+    # Replication settings
+    replica-read-only yes
+    replica-serve-stale-data yes
+
+  sentinel.conf: |
+    bind 0.0.0.0
+    port 26379
+    dir /data
+    sentinel monitor mymaster redis-ha-0.redis-ha-service 6379 2
+    sentinel down-after-milliseconds mymaster 5000
+    sentinel parallel-syncs mymaster 1
+    sentinel failover-timeout mymaster 10000
+
+---
+# Redis HA StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-ha
+  namespace: pixelcore
+spec:
+  serviceName: redis-ha-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis-ha
+  template:
+    metadata:
+      labels:
+        app: redis-ha
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis-ha
+                topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: init-redis
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              # Copy base config
+              cp /config/redis.conf /data/redis.conf
+
+              # Configure as master or replica
+              if [ "$POD_NAME" = "redis-ha-0" ]; then
+                echo "Setting up as MASTER"
+                echo "masterauth $REDIS_PASSWORD" >> /data/redis.conf
+                echo "requirepass $REDIS_PASSWORD" >> /data/redis.conf
+              else
+                echo "Setting up as REPLICA"
+                echo "replicaof redis-ha-0.redis-ha-service 6379" >> /data/redis.conf
+                echo "masterauth $REDIS_PASSWORD" >> /data/redis.conf
+                echo "requirepass $REDIS_PASSWORD" >> /data/redis.conf
+              fi
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+            - name: config
+              mountPath: /config
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - /data/redis.conf
+          ports:
+            - containerPort: 6379
+              name: redis
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -a
+                - $(REDIS_PASSWORD)
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -a
+                - $(REDIS_PASSWORD)
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: config
+          configMap:
+            name: redis-ha-config
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+# Redis Sentinel StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-sentinel
+  namespace: pixelcore
+spec:
+  serviceName: redis-sentinel-service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: redis-sentinel
+  template:
+    metadata:
+      labels:
+        app: redis-sentinel
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: redis-sentinel
+                topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: init-sentinel
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              cp /config/sentinel.conf /data/sentinel.conf
+              echo "sentinel auth-pass mymaster $REDIS_PASSWORD" >> /data/sentinel.conf
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: sentinel-storage
+              mountPath: /data
+            - name: config
+              mountPath: /config
+      containers:
+        - name: sentinel
+          image: redis:7-alpine
+          command:
+            - redis-sentinel
+            - /data/sentinel.conf
+          ports:
+            - containerPort: 26379
+              name: sentinel
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pixelcore-secrets
+                  key: REDIS_PASSWORD
+          volumeMounts:
+            - name: sentinel-storage
+              mountPath: /data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -p
+                - "26379"
+                - ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - -p
+                - "26379"
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+      volumes:
+        - name: config
+          configMap:
+            name: redis-ha-config
+  volumeClaimTemplates:
+    - metadata:
+        name: sentinel-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

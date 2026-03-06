@@ -1,0 +1,64 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: backend-cpu-stress
+  namespace: pixelcore
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  stressors:
+    cpu:
+      workers: 2
+      load: 80
+  duration: '5m'
+  scheduler:
+    cron: '@weekly'
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: backend-memory-stress
+  namespace: pixelcore
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  stressors:
+    memory:
+      workers: 1
+      size: '256MB'
+  duration: '5m'
+  scheduler:
+    cron: '@weekly'
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: database-io-stress
+  namespace: pixelcore
+spec:
+  mode: one
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: postgres-ha
+  stressors:
+    cpu:
+      workers: 1
+      load: 50
+  duration: '3m'
+  scheduler:
+    cron: '@weekly'
+  paused: true

@@ -1,0 +1,116 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: availability-rules
+  namespace: monitoring
+  labels:
+    prometheus: kube-prometheus
+spec:
+  groups:
+    - name: availability
+      interval: 30s
+      rules:
+        - alert: ServiceDown
+          expr: up{job="pixelcore-backend"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Service is down"
+            description: "Service {{ $labels.job }} is down"
+
+        - alert: HighErrorRate
+          expr: |
+            (
+              rate(http_requests_total{status=~"5.."}[5m])
+              /
+              rate(http_requests_total[5m])
+            ) > 0.01
+          for: 5m
+          labels:
+            severity: warning
+            category: availability
+          annotations:
+            summary: "High error rate detected"
+            description: "Service {{ $labels.service }} has error rate of {{ $value | humanizePercentage }} (threshold: 1%)"
+
+        - alert: CriticalErrorRate
+          expr: |
+            (
+              rate(http_requests_total{status=~"5.."}[5m])
+              /
+              rate(http_requests_total[5m])
+            ) > 0.05
+          for: 2m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Critical error rate detected"
+            description: "Service {{ $labels.service }} has critical error rate of {{ $value | humanizePercentage }} (threshold: 5%)"
+
+        - alert: LowAvailability
+          expr: |
+            (
+              sum(rate(http_requests_total{status!~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total[5m]))
+            ) < 0.9999
+          for: 5m
+          labels:
+            severity: warning
+            category: availability
+          annotations:
+            summary: "Service availability below SLA"
+            description: "Service availability is {{ $value | humanizePercentage }} (SLA: 99.99%)"
+
+        - alert: EndpointDown
+          expr: probe_success == 0
+          for: 2m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Endpoint is down"
+            description: "Endpoint {{ $labels.instance }} is down"
+
+        - alert: TooFewReplicas
+          expr: kube_deployment_status_replicas_available < kube_deployment_spec_replicas
+          for: 5m
+          labels:
+            severity: warning
+            category: availability
+          annotations:
+            summary: "Deployment has too few replicas"
+            description: "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has only {{ $value }} available replicas (expected: {{ $labels.spec_replicas }})"
+
+        - alert: NoHealthyBackends
+          expr: sum(up{job="pixelcore-backend"}) == 0
+          for: 1m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "No healthy backend instances"
+            description: "All backend instances are down"
+
+        - alert: DatabaseConnectionFailure
+          expr: pg_up == 0
+          for: 1m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Database connection failure"
+            description: "Cannot connect to PostgreSQL database"
+
+        - alert: RedisConnectionFailure
+          expr: redis_up == 0
+          for: 1m
+          labels:
+            severity: critical
+            category: availability
+          annotations:
+            summary: "Redis connection failure"
+            description: "Cannot connect to Redis"

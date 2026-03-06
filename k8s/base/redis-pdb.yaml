@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-ha-pdb
+  namespace: pixelcore
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: redis-ha
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-sentinel-pdb
+  namespace: pixelcore
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: redis-sentinel

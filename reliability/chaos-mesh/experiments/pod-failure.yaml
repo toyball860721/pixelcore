@@ -1,0 +1,65 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: backend-pod-failure
+  namespace: pixelcore
+spec:
+  action: pod-failure
+  mode: one
+  duration: '30s'
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  scheduler:
+    cron: '@weekly'
+  # Start paused - enable manually for testing
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: backend-pod-kill
+  namespace: pixelcore
+spec:
+  action: pod-kill
+  mode: fixed
+  value: '1'
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: backend
+  scheduler:
+    cron: '0 2 * * 0'  # Weekly at 2 AM Sunday
+  paused: true
+
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: database-pod-failure
+  namespace: pixelcore
+spec:
+  action: pod-failure
+  mode: one
+  duration: '60s'
+  selector:
+    namespaces:
+      - pixelcore
+    labelSelectors:
+      app: postgres-ha
+  # Only target replicas, not primary
+  selector:
+    namespaces:
+      - pixelcore
+    expressionSelectors:
+      - key: statefulset.kubernetes.io/pod-name
+        operator: NotIn
+        values:
+          - postgres-ha-0
+  scheduler:
+    cron: '@weekly'
+  paused: true

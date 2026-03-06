@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-ha-pdb
+  namespace: pixelcore
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: postgres-ha

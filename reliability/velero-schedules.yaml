@@ -1,0 +1,84 @@
+---
+# Daily full backup at 2 AM UTC (retention: 7 days)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-full-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"
+  template:
+    includedNamespaces:
+      - "*"
+    includedResources:
+      - "*"
+    includeClusterResources: true
+    snapshotVolumes: true
+    ttl: 168h  # 7 days
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    metadata:
+      labels:
+        backup-type: full
+        schedule: daily
+
+---
+# Hourly incremental backup (retention: 24 hours)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: hourly-incremental-backup
+  namespace: velero
+spec:
+  schedule: "0 * * * *"
+  template:
+    includedNamespaces:
+      - pixelcore
+      - monitoring
+      - istio-system
+    includedResources:
+      - deployments
+      - statefulsets
+      - configmaps
+      - secrets
+      - services
+      - persistentvolumeclaims
+    snapshotVolumes: true
+    ttl: 24h  # 24 hours
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    metadata:
+      labels:
+        backup-type: incremental
+        schedule: hourly
+
+---
+# Every 15-minute backup for critical namespaces (retention: 4 hours)
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: critical-15min-backup
+  namespace: velero
+spec:
+  schedule: "*/15 * * * *"
+  template:
+    includedNamespaces:
+      - pixelcore
+    includedResources:
+      - deployments
+      - statefulsets
+      - configmaps
+      - secrets
+      - persistentvolumeclaims
+    snapshotVolumes: true
+    ttl: 4h  # 4 hours
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    metadata:
+      labels:
+        backup-type: critical
+        schedule: 15min
+        priority: high
