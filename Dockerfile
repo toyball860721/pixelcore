@@ -1,10 +1,12 @@
 # 多阶段构建 - Rust 后端
-FROM rust:1.75-slim as builder
+FROM rustlang/rust:nightly-slim as builder
 
 # 安装构建依赖
 RUN apt-get update && apt-get install -y \
+    build-essential \
     pkg-config \
     libssl-dev \
+    perl \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建工作目录
@@ -13,8 +15,11 @@ WORKDIR /app
 # 复制 Cargo 文件
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
+COPY app/src-tauri ./app/src-tauri
 
 # 构建依赖（缓存层）
+# 设置环境变量使用系统 OpenSSL
+ENV OPENSSL_NO_VENDOR=1
 RUN mkdir src && \
     echo "fn main() {}" > src/main.rs && \
     cargo build --release && \
@@ -25,6 +30,7 @@ COPY src ./src
 COPY examples ./examples
 
 # 构建应用
+ENV OPENSSL_NO_VENDOR=1
 RUN cargo build --release
 
 # 运行时镜像
